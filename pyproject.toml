@@ -1,0 +1,62 @@
+[project]
+name = "document-mcp"
+version = "1.0.0"
+description = "A comprehensive MCP server for document management with versioning, search, and analysis"
+readme = "README.md"
+requires-python = ">=3.13"
+license = {text = "MIT"}
+authors = [
+    {name = "Glenn Mossy", email = "glenn@example.com"}
+]
+keywords = ["mcp", "document-management", "ai", "llm", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "mcp>=1.0.0",
+    "pydantic>=2.0.0",
+    "httpx>=0.25.0",
+    "python-docx>=1.1.0",  # Word document support
+    "pypdf>=4.0.0",  # PDF reading
+    "reportlab>=4.0.0",  # PDF creation
+    "python-magic>=0.4.27",  # File type detection
+    "pillow>=10.0.0",  # Image handling in documents
+    "openpyxl>=3.1.0",  # Excel support (.xlsx)
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.23.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+document-mcp = "document_mcp_server:mcp.run"
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["document_mcp_server"]
+
+[tool.black]
+line-length = 120
+target-version = ["py313"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true

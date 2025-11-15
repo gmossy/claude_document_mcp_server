@@ -1,0 +1,114 @@
+2025-11-15T04:19:46.590Z agentkeepalive sock[0#registry.npmjs.org:443::::::::true:::::::::::::] create, timeout 300001ms
+2025-11-15T04:19:46.727Z agentkeepalive sock[0#registry.npmjs.org:443::::::::true:::::::::::::](requests: 1, finished: 1) free
+2025-11-15T04:19:47.516Z spawn-rx spawning process: /usr/local/bin/node /Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/@modelcontextprotocol/inspector/client/bin/start.js,--,/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server/.venv/bin/python,document_mcp_server.py, {"signal":{},"echoOutput":true,"stdio":"inherit"}
+Starting MCP inspector...
+2025-11-15T04:19:47.743Z spawn-rx spawning process: /usr/local/bin/node /Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/@modelcontextprotocol/inspector/server/build/index.js,--command=/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server/.venv/bin/python,--args=document_mcp_server.py, {"env":{"TERM_PROGRAM":"vscode","NODE":"/usr/local/bin/node","INIT_CWD":"/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server","TERM":"xterm-256color","SHELL":"/bin/zsh","npm_config_metrics_registry":"https://registry.npmjs.org/","TMPDIR":"/var/folders/x6/jzqx3jk9177f866xcf09hpnm0000gn/T/","npm_config_global_prefix":"/usr/local","CONDA_SHLVL":"0","VSCODE_PYTHON_AUTOACTIVATE_GUARD":"1","TERM_PROGRAM_VERSION":"1.105.0","ZDOTDIR":"/Users/gmossy","ORIGINAL_XDG_CURRENT_DESKTOP":"undefined","MallocNanoZone":"0","COLOR":"0","TERM_SESSION_ID":"9141747E-31DF-4CE9-AFE1-A3C534BB3CAA","npm_config_noproxy":"","npm_config_local_prefix":"/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server","USER":"gmossy","COMMAND_MODE":"unix2003","npm_config_globalconfig":"/usr/local/etc/npmrc","CONDA_EXE":"/Users/gmossy/opt/anaconda3/bin/conda","SSH_AUTH_SOCK":"/private/tmp/com.apple.launchd.Yl5SuAfLwE/Listeners","VSCODE_PROFILE_INITIALIZED":"1","__CF_USER_TEXT_ENCODING":"0x1F5:0x0:0x0","npm_execpath":"/usr/local/lib/node_modules/npm/bin/npx-cli.js","PAGER":"cat","PYDEVD_DISABLE_FILE_VALIDATION":"1","_CE_CONDA":"","PATH":"/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/.bin:/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server/node_modules/.bin:/Volumes/My Book8TB-6TB Partition/node_modules/.bin:/Volumes/node_modules/.bin:/node_modules/.bin:/usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/Users/gmossy/.pyenv/shims:/Users/gmossy/.codeium/windsurf/bin:/Library/Frameworks/Python.framework/Versions/3.14/bin:/Library/Frameworks/Python.framework/Versions/3.10/bin:/Library/Frameworks/Python.framework/Versions/3.12/bin:/Library/Frameworks/Python.framework/Versions/3.11/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/gmossy/Library/Python/3.8/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Applications/Wireshark.app/Contents/MacOS:/usr/local/share/dotnet:~/.dotnet/tools:/usr/local/go/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/gmossy/.codeium/windsurf/bin:/Users/gmossy/opt/anaconda3/condabin:/Library/Frameworks/Python.framework/Versions/3.14/bin:/Library/Frameworks/Python.framework/Versions/3.10/bin:/Library/Frameworks/Python.framework/Versions/3.12/bin:/Library/Frameworks/Python.framework/Versions/3.11/bin:/Users/gmossy/.cargo/bin:/Users/gmossy/.local/bin:/Users/gmossy/.windsurf/extensions/ms-python.debugpy-2025.14.1-darwin-x64/bundled/scripts/noConfigScripts:/Users/gmossy/.local/bin","npm_package_json":"/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server/package.json","_":"/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/.bin/mcp-inspector","LaunchInstanceID":"D73DED47-45A5-4FE2-8AE5-E2D1CEE66D44","npm_config_userconfig":"/Users/gmossy/.npmrc","npm_config_init_module":"/Users/gmossy/.npm-init.js","USER_ZDOTDIR":"/Users/gmossy","__CFBundleIdentifier":"com.exafunction.windsurf","npm_command":"exec","PWD":"/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server","npm_lifecycle_event":"npx","EDITOR":"vi","LANG":"en_US.UTF-8","BUNDLED_DEBUGPY_PATH":"/Users/gmossy/.windsurf/extensions/ms-python.debugpy-2025.14.1-darwin-x64/bundled/libs/debugpy","PYTHONSTARTUP":"/Users/gmossy/Library/Application Support/Windsurf/User/workspaceStorage/d46c44689b47bacc21d854f364c35033/ms-python.python/pythonrc.py","VSCODE_GIT_ASKPASS_EXTRA_ARGS":"","XPC_FLAGS":"0x0","npm_config_node_gyp":"/usr/local/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js","_CE_M":"","XPC_SERVICE_NAME":"0","DANGEROUSLY_OMIT_AUTH":"true","VSCODE_INJECTION":"1","VSCODE_DEBUGPY_ADAPTER_ENDPOINTS":"/Users/gmossy/.windsurf/extensions/ms-python.debugpy-2025.14.1-darwin-x64/.noConfigDebugAdapterEndpoints/endpoint-36e4616f8cd1d524.txt","SHLVL":"4","PYENV_SHELL":"zsh","HOME":"/Users/gmossy","VSCODE_GIT_ASKPASS_MAIN":"/Applications/Windsurf.app/Contents/Resources/app/extensions/git/dist/askpass-main.js","PYTHON_BASIC_REPL":"1","npm_config_cache":"/Users/gmossy/.npm","CONDA_PYTHON_EXE":"/Users/gmossy/opt/anaconda3/bin/python","LOGNAME":"gmossy","npm_lifecycle_script":"mcp-inspector","VSCODE_GIT_IPC_HANDLE":"/var/folders/x6/jzqx3jk9177f866xcf09hpnm0000gn/T/vscode-git-406d713cff.sock","npm_config_user_agent":"npm/8.19.3 node/v19.0.1 darwin x64 workspaces/false","VSCODE_GIT_ASKPASS_NODE":"/Applications/Windsurf.app/Contents/Frameworks/Windsurf Helper (Plugin).app/Contents/MacOS/Windsurf Helper (Plugin)","GIT_ASKPASS":"/Applications/Windsurf.app/Contents/Resources/app/extensions/git/dist/askpass.sh","GIT_PAGER":"cat","DEBUG":"*","SECURITYSESSIONID":"186a2","npm_node_execpath":"/usr/local/bin/node","npm_config_prefix":"/usr/local","COLORTERM":"truecolor","SERVER_PORT":"6277","CLIENT_PORT":"6274","MCP_PROXY_AUTH_TOKEN":"e10074120381a8369356871137f4215793918e328d46935b326f1bf557d61baf","MCP_ENV_VARS":"{}"},"signal":{},"echoOutput":true}
+2025-11-15T04:19:48.156Z express:application set "x-powered-by" to true
+2025-11-15T04:19:48.158Z express:application set "etag" to 'weak'
+2025-11-15T04:19:48.159Z express:application set "etag fn" to [Function: generateETag]
+2025-11-15T04:19:48.159Z express:application set "env" to 'development'
+2025-11-15T04:19:48.159Z express:application set "query parser" to 'simple'
+2025-11-15T04:19:48.159Z express:application set "query parser fn" to [Function: parse]
+2025-11-15T04:19:48.159Z express:application set "subdomain offset" to 2
+2025-11-15T04:19:48.159Z express:application set "trust proxy" to false
+2025-11-15T04:19:48.160Z express:application set "trust proxy fn" to [Function: trustNone]
+2025-11-15T04:19:48.160Z express:application booting in development mode
+2025-11-15T04:19:48.160Z express:application set "view" to [Function: View]
+2025-11-15T04:19:48.160Z express:application set "views" to '/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server/views'
+2025-11-15T04:19:48.160Z express:application set "jsonp callback name" to 'callback'
+2025-11-15T04:19:48.161Z router use '/' corsMiddleware
+2025-11-15T04:19:48.161Z router:layer new '/'
+2025-11-15T04:19:48.162Z router use '/' <anonymous>
+2025-11-15T04:19:48.162Z router:layer new '/'
+2025-11-15T04:19:48.162Z router:route new '/mcp'
+2025-11-15T04:19:48.162Z router:layer new '/mcp'
+2025-11-15T04:19:48.162Z router:route get /mcp
+2025-11-15T04:19:48.162Z router:layer new '/'
+2025-11-15T04:19:48.162Z router:route get /mcp
+2025-11-15T04:19:48.163Z router:layer new '/'
+2025-11-15T04:19:48.163Z router:route get /mcp
+2025-11-15T04:19:48.163Z router:layer new '/'
+2025-11-15T04:19:48.163Z router:route new '/mcp'
+2025-11-15T04:19:48.163Z router:layer new '/mcp'
+2025-11-15T04:19:48.163Z router:route post /mcp
+2025-11-15T04:19:48.163Z router:layer new '/'
+2025-11-15T04:19:48.163Z router:route post /mcp
+2025-11-15T04:19:48.163Z router:layer new '/'
+2025-11-15T04:19:48.163Z router:route post /mcp
+2025-11-15T04:19:48.163Z router:layer new '/'
+2025-11-15T04:19:48.164Z router:route new '/mcp'
+2025-11-15T04:19:48.164Z router:layer new '/mcp'
+2025-11-15T04:19:48.164Z router:route delete /mcp
+2025-11-15T04:19:48.164Z router:layer new '/'
+2025-11-15T04:19:48.164Z router:route delete /mcp
+2025-11-15T04:19:48.164Z router:layer new '/'
+2025-11-15T04:19:48.164Z router:route delete /mcp
+2025-11-15T04:19:48.164Z router:layer new '/'
+2025-11-15T04:19:48.164Z router:route new '/stdio'
+2025-11-15T04:19:48.164Z router:layer new '/stdio'
+2025-11-15T04:19:48.164Z router:route get /stdio
+2025-11-15T04:19:48.164Z router:layer new '/'
+2025-11-15T04:19:48.164Z router:route get /stdio
+2025-11-15T04:19:48.164Z router:layer new '/'
+2025-11-15T04:19:48.164Z router:route get /stdio
+2025-11-15T04:19:48.164Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route new '/sse'
+2025-11-15T04:19:48.165Z router:layer new '/sse'
+2025-11-15T04:19:48.165Z router:route get /sse
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route get /sse
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route get /sse
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route new '/message'
+2025-11-15T04:19:48.165Z router:layer new '/message'
+2025-11-15T04:19:48.165Z router:route post /message
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route post /message
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route post /message
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route new '/health'
+2025-11-15T04:19:48.165Z router:layer new '/health'
+2025-11-15T04:19:48.165Z router:route get /health
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route new '/config'
+2025-11-15T04:19:48.165Z router:layer new '/config'
+2025-11-15T04:19:48.165Z router:route get /config
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route get /config
+2025-11-15T04:19:48.165Z router:layer new '/'
+2025-11-15T04:19:48.165Z router:route get /config
+2025-11-15T04:19:48.165Z router:layer new '/'
+⚙️ Proxy server listening on localhost:6277
+⚠️  WARNING: Authentication is disabled. This is not recommended.
+2025-11-15T04:19:49.751Z spawn-rx spawning process: /usr/local/bin/node /Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/@modelcontextprotocol/inspector/client/bin/client.js, {"env":{"TERM_PROGRAM":"vscode","NODE":"/usr/local/bin/node","INIT_CWD":"/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server","TERM":"xterm-256color","SHELL":"/bin/zsh","npm_config_metrics_registry":"https://registry.npmjs.org/","TMPDIR":"/var/folders/x6/jzqx3jk9177f866xcf09hpnm0000gn/T/","npm_config_global_prefix":"/usr/local","CONDA_SHLVL":"0","VSCODE_PYTHON_AUTOACTIVATE_GUARD":"1","TERM_PROGRAM_VERSION":"1.105.0","ZDOTDIR":"/Users/gmossy","ORIGINAL_XDG_CURRENT_DESKTOP":"undefined","MallocNanoZone":"0","COLOR":"0","TERM_SESSION_ID":"9141747E-31DF-4CE9-AFE1-A3C534BB3CAA","npm_config_noproxy":"","npm_config_local_prefix":"/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server","USER":"gmossy","COMMAND_MODE":"unix2003","npm_config_globalconfig":"/usr/local/etc/npmrc","CONDA_EXE":"/Users/gmossy/opt/anaconda3/bin/conda","SSH_AUTH_SOCK":"/private/tmp/com.apple.launchd.Yl5SuAfLwE/Listeners","VSCODE_PROFILE_INITIALIZED":"1","__CF_USER_TEXT_ENCODING":"0x1F5:0x0:0x0","npm_execpath":"/usr/local/lib/node_modules/npm/bin/npx-cli.js","PAGER":"cat","PYDEVD_DISABLE_FILE_VALIDATION":"1","_CE_CONDA":"","PATH":"/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/.bin:/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server/node_modules/.bin:/Volumes/My Book8TB-6TB Partition/node_modules/.bin:/Volumes/node_modules/.bin:/node_modules/.bin:/usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/Users/gmossy/.pyenv/shims:/Users/gmossy/.codeium/windsurf/bin:/Library/Frameworks/Python.framework/Versions/3.14/bin:/Library/Frameworks/Python.framework/Versions/3.10/bin:/Library/Frameworks/Python.framework/Versions/3.12/bin:/Library/Frameworks/Python.framework/Versions/3.11/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/gmossy/Library/Python/3.8/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Applications/Wireshark.app/Contents/MacOS:/usr/local/share/dotnet:~/.dotnet/tools:/usr/local/go/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/gmossy/.codeium/windsurf/bin:/Users/gmossy/opt/anaconda3/condabin:/Library/Frameworks/Python.framework/Versions/3.14/bin:/Library/Frameworks/Python.framework/Versions/3.10/bin:/Library/Frameworks/Python.framework/Versions/3.12/bin:/Library/Frameworks/Python.framework/Versions/3.11/bin:/Users/gmossy/.cargo/bin:/Users/gmossy/.local/bin:/Users/gmossy/.windsurf/extensions/ms-python.debugpy-2025.14.1-darwin-x64/bundled/scripts/noConfigScripts:/Users/gmossy/.local/bin","npm_package_json":"/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server/package.json","_":"/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/.bin/mcp-inspector","LaunchInstanceID":"D73DED47-45A5-4FE2-8AE5-E2D1CEE66D44","npm_config_userconfig":"/Users/gmossy/.npmrc","npm_config_init_module":"/Users/gmossy/.npm-init.js","USER_ZDOTDIR":"/Users/gmossy","__CFBundleIdentifier":"com.exafunction.windsurf","npm_command":"exec","PWD":"/Volumes/My Book8TB-6TB Partition/claude_document_mcp_server","npm_lifecycle_event":"npx","EDITOR":"vi","LANG":"en_US.UTF-8","BUNDLED_DEBUGPY_PATH":"/Users/gmossy/.windsurf/extensions/ms-python.debugpy-2025.14.1-darwin-x64/bundled/libs/debugpy","PYTHONSTARTUP":"/Users/gmossy/Library/Application Support/Windsurf/User/workspaceStorage/d46c44689b47bacc21d854f364c35033/ms-python.python/pythonrc.py","VSCODE_GIT_ASKPASS_EXTRA_ARGS":"","XPC_FLAGS":"0x0","npm_config_node_gyp":"/usr/local/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js","_CE_M":"","XPC_SERVICE_NAME":"0","DANGEROUSLY_OMIT_AUTH":"true","VSCODE_INJECTION":"1","VSCODE_DEBUGPY_ADAPTER_ENDPOINTS":"/Users/gmossy/.windsurf/extensions/ms-python.debugpy-2025.14.1-darwin-x64/.noConfigDebugAdapterEndpoints/endpoint-36e4616f8cd1d524.txt","SHLVL":"4","PYENV_SHELL":"zsh","HOME":"/Users/gmossy","VSCODE_GIT_ASKPASS_MAIN":"/Applications/Windsurf.app/Contents/Resources/app/extensions/git/dist/askpass-main.js","PYTHON_BASIC_REPL":"1","npm_config_cache":"/Users/gmossy/.npm","CONDA_PYTHON_EXE":"/Users/gmossy/opt/anaconda3/bin/python","LOGNAME":"gmossy","npm_lifecycle_script":"mcp-inspector","VSCODE_GIT_IPC_HANDLE":"/var/folders/x6/jzqx3jk9177f866xcf09hpnm0000gn/T/vscode-git-406d713cff.sock","npm_config_user_agent":"npm/8.19.3 node/v19.0.1 darwin x64 workspaces/false","VSCODE_GIT_ASKPASS_NODE":"/Applications/Windsurf.app/Contents/Frameworks/Windsurf Helper (Plugin).app/Contents/MacOS/Windsurf Helper (Plugin)","GIT_ASKPASS":"/Applications/Windsurf.app/Contents/Resources/app/extensions/git/dist/askpass.sh","GIT_PAGER":"cat","DEBUG":"*","SECURITYSESSIONID":"186a2","npm_node_execpath":"/usr/local/bin/node","npm_config_prefix":"/usr/local","COLORTERM":"truecolor","CLIENT_PORT":"6274","INSPECTOR_URL":"http://localhost:6274"},"signal":{},"echoOutput":true}
+
+🚀 MCP Inspector is up and running at:
+   http://localhost:6274
+
+🌐 Opening browser...
+2025-11-15T04:20:01.729Z agentkeepalive sock[0#registry.npmjs.org:443::::::::true:::::::::::::](requests: 1, finished: 1) timeout after 15000ms, listeners 2, defaultTimeoutListenerCount 3, hasHttpRequest false, HttpRequest timeoutListenerCount 0
+2025-11-15T04:20:01.729Z agentkeepalive timeout listeners: onTimeout, onTimeout
+2025-11-15T04:20:01.729Z agentkeepalive sock[0#registry.npmjs.org:443::::::::true:::::::::::::] is free, destroy quietly
+2025-11-15T04:20:01.730Z agentkeepalive sock[0#registry.npmjs.org:443::::::::true:::::::::::::](requests: 1, finished: 1) close, isError: false
+2025-11-15T04:20:53.545Z router dispatching GET /health
+2025-11-15T04:20:53.546Z router corsMiddleware  : /health
+2025-11-15T04:20:53.547Z router <anonymous>  : /health
+2025-11-15T04:21:20.041Z router dispatching GET /stdio
+2025-11-15T04:21:20.041Z router corsMiddleware  : /stdio
+2025-11-15T04:21:20.041Z router <anonymous>  : /stdio
+New STDIO connection request
+Query parameters: {}
+Invalid transport type: undefined
+Error in /stdio route: Error: Invalid transport type specified
+    at createTransport (file:///Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/@modelcontextprotocol/inspector/server/build/index.js:176:15)
+    at file:///Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/@modelcontextprotocol/inspector/server/build/index.js:282:37
+    at Layer.handleRequest (/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/router/lib/route.js:157:13)
+    at authMiddleware (file:///Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/@modelcontextprotocol/inspector/server/build/index.js:96:16)
+    at Layer.handleRequest (/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/router/lib/route.js:157:13)
+    at originValidationMiddleware (file:///Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/@modelcontextprotocol/inspector/server/build/index.js:92:5)
+    at Layer.handleRequest (/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/gmossy/.npm/_npx/5a9d879542beca3a/node_modules/router/lib/route.js:157:13)

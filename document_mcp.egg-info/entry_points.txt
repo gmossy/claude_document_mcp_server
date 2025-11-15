@@ -1,0 +1,2 @@
+[console_scripts]
+document-mcp = document_mcp_server:mcp.run
