@@ -36,6 +36,18 @@ except ImportError:
     Workbook = None
 
 try:
+    from pptx import Presentation
+    from pptx.util import Inches, Pt
+    from pptx.chart.data import CategoryChartData
+    from pptx.enum.chart import XL_CHART_TYPE
+except ImportError:
+    Presentation = None
+    Inches = None
+    Pt = None
+    CategoryChartData = None
+    XL_CHART_TYPE = None
+
+try:
     import magic
 except ImportError:
     magic = None
@@ -276,6 +288,96 @@ def extract_text_from_excel(file_path: Path) -> Tuple[str, Dict]:
         raise DocumentParseError(f"Failed to parse Excel document: {str(e)}")
 
 
+def extract_text_from_powerpoint(file_path: Path) -> Tuple[str, Dict]:
+    """
+    Extract text content from a PowerPoint file.
+    
+    Args:
+        file_path: Path to the .pptx file
+        
+    Returns:
+        Tuple of (extracted_text, metadata_dict)
+        
+    Raises:
+        DocumentParseError: If parsing fails
+        UnsupportedFormatError: If python-pptx is not installed
+    """
+    if Presentation is None:
+        raise UnsupportedFormatError(
+            "python-pptx is not installed. Install with: pip install python-pptx"
+        )
+    
+    try:
+        prs = Presentation(file_path)
+        
+        # Extract text from all slides
+        slides_text = []
+        total_shapes = 0
+        total_text_boxes = 0
+        
+        for slide_num, slide in enumerate(prs.slides, 1):
+            slide_content = []
+            slide_content.append(f"=== Slide {slide_num} ===\n")
+            
+            # Extract text from all shapes in the slide
+            for shape in slide.shapes:
+                total_shapes += 1
+                
+                # Check if shape has text
+                if hasattr(shape, "text") and shape.text.strip():
+                    total_text_boxes += 1
+                    slide_content.append(shape.text)
+                
+                # Check for tables
+                if shape.has_table:
+                    table = shape.table
+                    table_data = []
+                    for row in table.rows:
+                        row_data = [cell.text.strip() for cell in row.cells]
+                        if any(row_data):  # Only add non-empty rows
+                            table_data.append("\t".join(row_data))
+                    if table_data:
+                        slide_content.append("\n[Table]")
+                        slide_content.extend(table_data)
+            
+            if len(slide_content) > 1:  # More than just the slide header
+                slides_text.append("\n".join(slide_content))
+        
+        text = "\n\n".join(slides_text)
+        
+        # Extract metadata
+        metadata = {
+            "format": "pptx",
+            "slide_count": len(prs.slides),
+            "total_shapes": total_shapes,
+            "text_boxes": total_text_boxes,
+        }
+        
+        # Try to get PowerPoint properties
+        try:
+            core_props = prs.core_properties
+            if core_props:
+                if core_props.author:
+                    metadata["author"] = core_props.author
+                if core_props.title:
+                    metadata["original_title"] = core_props.title
+                if core_props.subject:
+                    metadata["subject"] = core_props.subject
+                if core_props.created:
+                    metadata["created"] = str(core_props.created)
+                if core_props.modified:
+                    metadata["modified"] = str(core_props.modified)
+                if core_props.last_modified_by:
+                    metadata["last_modified_by"] = core_props.last_modified_by
+        except Exception:
+            pass
+        
+        return text, metadata
+        
+    except Exception as e:
+        raise DocumentParseError(f"Failed to parse PowerPoint document: {str(e)}")
+
+
 def extract_text_from_file(file_path: Path) -> Tuple[str, Dict]:
     """
     Auto-detect file type and extract text content.
@@ -304,6 +406,8 @@ def extract_text_from_file(file_path: Path) -> Tuple[str, Dict]:
         return extract_text_from_pdf(file_path)
     elif mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" or extension == ".xlsx":
         return extract_text_from_excel(file_path)
+    elif mime_type == "application/vnd.openxmlformats-officedocument.presentationml.presentation" or extension == ".pptx":
+        return extract_text_from_powerpoint(file_path)
     elif mime_type.startswith("text/") or extension in [".txt", ".md", ".markdown"]:
         # Plain text files
         text = file_path.read_text(encoding="utf-8")
@@ -312,7 +416,7 @@ def extract_text_from_file(file_path: Path) -> Tuple[str, Dict]:
     else:
         raise UnsupportedFormatError(
             f"Unsupported file format: {mime_type} ({extension}). "
-            f"Supported formats: .docx, .pdf, .xlsx, .txt, .md"
+            f"Supported formats: .docx, .pdf, .xlsx, .pptx, .txt, .md"
         )
 
 
@@ -441,6 +545,200 @@ def create_excel_from_data(data: List[List[str]], output_path: Path, sheet_name:
         
     except Exception as e:
         raise DocumentParseError(f"Failed to create Excel document: {str(e)}")
+
+
+def create_powerpoint_from_slides(slides_data: List[Dict], output_path: Path, title: str = "Presentation", template_path: Optional[Path] = None) -> None:
+    """
+    Create a PowerPoint file from slide data, optionally using a template.
+    
+    Args:
+        slides_data: List of slide dictionaries, each containing:
+            - title: Slide title (optional)
+            - content: List of bullet points or text blocks
+            - layout: Layout type (default: "title_and_content")
+            - layout_index: Specific layout index from template (optional)
+            - chart: Chart data (optional) with:
+                - type: Chart type ("bar", "column", "line", "pie")
+                - categories: List of category labels
+                - series: List of dicts with 'name' and 'values'
+        output_path: Path where PowerPoint file should be saved
+        title: Presentation title (used in properties)
+        template_path: Path to existing .pptx template file (optional)
+                       If provided, uses template's theme, colors, fonts, and layouts
+        
+    Raises:
+        UnsupportedFormatError: If python-pptx is not installed
+        DocumentParseError: If PowerPoint creation fails
+    """
+    if Presentation is None or Inches is None or Pt is None:
+        raise UnsupportedFormatError(
+            "python-pptx is not installed. Install with: pip install python-pptx"
+        )
+    
+    try:
+        # Load template if provided, otherwise create blank presentation
+        if template_path and template_path.exists():
+            prs = Presentation(str(template_path))
+        else:
+            prs = Presentation()
+            prs.slide_width = Inches(10)  # Standard 16:9
+            prs.slide_height = Inches(7.5)
+        
+        # Set presentation properties
+        prs.core_properties.title = title
+        
+        for slide_data in slides_data:
+            # Determine layout
+            layout_type = slide_data.get("layout", "title_and_content")
+            
+            # If layout_index is specified, use that exact layout from template
+            if "layout_index" in slide_data:
+                layout_index = slide_data["layout_index"]
+                if 0 <= layout_index < len(prs.slide_layouts):
+                    slide_layout = prs.slide_layouts[layout_index]
+                else:
+                    slide_layout = prs.slide_layouts[1]  # Default to title and content
+            else:
+                # Use layout type string (for backward compatibility)
+                if layout_type == "title":
+                    slide_layout = prs.slide_layouts[0]  # Title slide
+                elif layout_type == "blank":
+                    slide_layout = prs.slide_layouts[6] if len(prs.slide_layouts) > 6 else prs.slide_layouts[1]
+                else:
+                    slide_layout = prs.slide_layouts[1]  # Title and content
+            
+            slide = prs.slides.add_slide(slide_layout)
+            
+            # Add title if provided
+            if "title" in slide_data and slide_data["title"]:
+                if slide.shapes.title:
+                    slide.shapes.title.text = slide_data["title"]
+            
+            # Add content
+            if "content" in slide_data:
+                content = slide_data["content"]
+                
+                # For title and content layout, use the text placeholder
+                if layout_type == "title_and_content" and len(slide.placeholders) > 1:
+                    text_frame = slide.placeholders[1].text_frame
+                    text_frame.clear()  # Clear default text
+                    
+                    if isinstance(content, list):
+                        # Add bullet points
+                        for i, item in enumerate(content):
+                            if i == 0:
+                                p = text_frame.paragraphs[0]
+                            else:
+                                p = text_frame.add_paragraph()
+                            p.text = str(item)
+                            p.level = 0
+                    else:
+                        # Add as single text block
+                        text_frame.text = str(content)
+                
+                # For blank layout, add text box
+                elif layout_type == "blank":
+                    left = Inches(1)
+                    top = Inches(1.5)
+                    width = Inches(8)
+                    height = Inches(5)
+                    
+                    textbox = slide.shapes.add_textbox(left, top, width, height)
+                    text_frame = textbox.text_frame
+                    
+                    if isinstance(content, list):
+                        text_frame.text = "\n".join(str(item) for item in content)
+                    else:
+                        text_frame.text = str(content)
+            
+            # Add chart if provided
+            if "chart" in slide_data and CategoryChartData is not None and XL_CHART_TYPE is not None:
+                chart_info = slide_data["chart"]
+                chart_type_str = chart_info.get("type", "column").lower()
+                
+                # Map chart type string to enum
+                chart_type_map = {
+                    "bar": XL_CHART_TYPE.BAR_CLUSTERED,
+                    "column": XL_CHART_TYPE.COLUMN_CLUSTERED,
+                    "line": XL_CHART_TYPE.LINE,
+                    "pie": XL_CHART_TYPE.PIE,
+                }
+                chart_type = chart_type_map.get(chart_type_str, XL_CHART_TYPE.COLUMN_CLUSTERED)
+                
+                # Create chart data
+                chart_data = CategoryChartData()
+                chart_data.categories = chart_info.get("categories", [])
+                
+                # Add series
+                for series_info in chart_info.get("series", []):
+                    chart_data.add_series(
+                        series_info.get("name", "Series"),
+                        series_info.get("values", [])
+                    )
+                
+                # Add chart to slide
+                x, y, cx, cy = Inches(1), Inches(2), Inches(8), Inches(5)
+                chart = slide.shapes.add_chart(
+                    chart_type, x, y, cx, cy, chart_data
+                ).chart
+                
+                # Optional: Set chart title if provided
+                if "chart_title" in chart_info:
+                    chart.has_title = True
+                    chart.chart_title.text_frame.text = chart_info["chart_title"]
+        
+        prs.save(str(output_path))
+        
+    except Exception as e:
+        raise DocumentParseError(f"Failed to create PowerPoint document: {str(e)}")
+
+
+def get_powerpoint_template_layouts(template_path: Path) -> List[Dict]:
+    """
+    Get information about available layouts in a PowerPoint template.
+    
+    Args:
+        template_path: Path to the .pptx template file
+        
+    Returns:
+        List of layout dictionaries with 'index', 'name', and 'placeholder_count'
+        
+    Raises:
+        UnsupportedFormatError: If python-pptx is not installed
+        DocumentParseError: If template cannot be read
+    """
+    if Presentation is None:
+        raise UnsupportedFormatError(
+            "python-pptx is not installed. Install with: pip install python-pptx"
+        )
+    
+    try:
+        prs = Presentation(str(template_path))
+        layouts = []
+        
+        for idx, layout in enumerate(prs.slide_layouts):
+            layout_info = {
+                "index": idx,
+                "name": layout.name,
+                "placeholder_count": len(layout.placeholders),
+                "placeholders": []
+            }
+            
+            # Get placeholder information
+            for placeholder in layout.placeholders:
+                placeholder_info = {
+                    "index": placeholder.placeholder_format.idx,
+                    "type": str(placeholder.placeholder_format.type),
+                    "name": placeholder.name
+                }
+                layout_info["placeholders"].append(placeholder_info)
+            
+            layouts.append(layout_info)
+        
+        return layouts
+        
+    except Exception as e:
+        raise DocumentParseError(f"Failed to read PowerPoint template: {str(e)}")
 
 
 def encode_file_to_base64(file_path: Path) -> str:
