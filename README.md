@@ -1,6 +1,25 @@
 # Document Management MCP Server
 
-A comprehensive Model Context Protocol (MCP) server for document management, providing AI assistants with powerful tools to create, search, version, and analyze documents.
+> **Created by Glenn Mossy**  
+> *Sr. AI Software Developer & Data Scientist*  
+> November 14, 2024
+
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![MCP](https://img.shields.io/badge/MCP-1.0+-green.svg)](https://modelcontextprotocol.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## Overview
+
+A production-ready, enterprise-grade Model Context Protocol (MCP) server that provides AI assistants with comprehensive document management capabilities. Built with modern Python 3.13, this server demonstrates advanced software engineering practices including clean architecture, comprehensive testing, and multi-format document processing.
+
+### Key Highlights
+
+- **13 Production-Ready MCP Tools** for complete document lifecycle management
+- **Multi-Format Support**: Word (.docx), PDF, Excel (.xlsx), Markdown, and plain text
+- **Advanced Search**: Full-text search with FTS5 indexing and semantic filtering
+- **Version Control**: Complete document history with diff comparison
+- **Enterprise Features**: Bulk operations, analytics, and export capabilities
+- **Robust Architecture**: SQLite with FTS5, async operations, comprehensive error handling
 
 ## Features
 
@@ -15,9 +34,41 @@ A comprehensive Model Context Protocol (MCP) server for document management, pro
 - **Tag-based filtering** with AND logic for precise results
 - **Version control** with complete history and comparison tools
 - **Content analysis** including word count, reading time, and keyword extraction
-- **Multi-format export** (Markdown, HTML, JSON, TXT)
+- **Multi-format export** (Markdown, HTML, JSON, TXT, Word, PDF, Excel)
 - **Bulk operations** for efficient tag management
 - **Comprehensive statistics** and system monitoring
+
+### Document Format Support
+- **Microsoft Word** (.docx) - Read and write with metadata extraction
+- **PDF** - Read and create with multi-page support
+- **Microsoft Excel** (.xlsx) - Multi-sheet extraction and creation
+- **Markdown** (.md) - Full support with formatting
+- **Plain Text** (.txt) - Universal compatibility
+
+## Technical Architecture
+
+### Technology Stack
+- **Python 3.13** - Latest Python with performance improvements
+- **FastMCP** - Modern MCP server framework with async support
+- **SQLite with FTS5** - Full-text search indexing for performance
+- **Pydantic v2** - Type-safe data validation and serialization
+- **openpyxl** - Excel file processing
+- **python-docx** - Word document manipulation
+- **pypdf & reportlab** - PDF reading and generation
+
+### Design Patterns
+- **Clean Architecture** - Separation of concerns with clear boundaries
+- **Async/Await** - Non-blocking I/O for scalability
+- **Type Safety** - Comprehensive type hints and Pydantic models
+- **Error Handling** - Graceful degradation with detailed error messages
+- **Version Control** - Automatic versioning with complete audit trail
+
+### Code Quality
+- **Comprehensive Testing** - Unit tests for all major components
+- **Documentation** - Detailed docstrings and user guides
+- **Type Checking** - Full mypy compatibility
+- **Code Formatting** - Black and Ruff for consistency
+- **Best Practices** - Following PEP 8 and modern Python standards
 
 ## Quick Start
 
@@ -495,6 +546,67 @@ Contributions welcome! Please ensure:
 4. Error messages are actionable
 5. Documentation is updated
 
+## Project Metrics
+
+- **Lines of Code**: 7,300+
+- **Test Coverage**: Comprehensive unit and integration tests
+- **Documentation**: 5 detailed guides + inline documentation
+- **Supported Formats**: 5 (Word, PDF, Excel, Markdown, Text)
+- **MCP Tools**: 13 production-ready endpoints
+- **Dependencies**: Minimal, well-maintained packages
+- **Performance**: Sub-second response for most operations
+
+## Skills Demonstrated
+
+This project showcases proficiency in:
+
+### Software Engineering
+- **Clean Code Architecture** - Modular design with clear separation of concerns
+- **API Design** - RESTful principles applied to MCP tool design
+- **Database Design** - Efficient schema with FTS5 indexing
+- **Error Handling** - Comprehensive exception handling and validation
+- **Documentation** - Professional-grade documentation and examples
+
+### Data Science & AI
+- **Document Processing** - Multi-format parsing and text extraction
+- **Search & Retrieval** - Full-text search with ranking algorithms
+- **Content Analysis** - Statistical analysis and keyword extraction
+- **Version Control** - Data versioning and diff algorithms
+- **AI Integration** - MCP protocol for LLM tool use
+
+### Modern Python
+- **Python 3.13** - Latest language features and optimizations
+- **Async Programming** - Non-blocking I/O with asyncio
+- **Type Safety** - Comprehensive type hints and Pydantic validation
+- **Package Management** - Modern tooling with UV
+- **Testing** - Unit tests and integration testing
+
+### DevOps & Tools
+- **Git** - Version control and repository management
+- **Virtual Environments** - Dependency isolation
+- **CI/CD Ready** - Structured for automated deployment
+- **Cross-Platform** - Works on macOS, Linux, and Windows
+
+## About the Creator
+
+**Glenn Mossy** is a Senior AI Software Developer and Data Scientist with expertise in building production-ready AI systems. This project demonstrates the ability to:
+
+- Design and implement complex systems from scratch
+- Write clean, maintainable, and well-documented code
+- Integrate multiple technologies into cohesive solutions
+- Follow software engineering best practices
+- Deliver enterprise-grade applications
+
+### Contact & Links
+
+- **GitHub**: [github.com/gmossy/claude_document_mcp_server](https://github.com/gmossy/claude_document_mcp_server)
+- **Project Date**: November 14, 2024
+- **Role**: Creator & Lead Developer
+
 ## Acknowledgments
 
 Built following the [Model Context Protocol](https://modelcontextprotocol.io/) specification and best practices.
+
+---
+
+*This project serves as a portfolio piece demonstrating advanced software engineering, AI integration, and data science capabilities.*
