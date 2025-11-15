@@ -27,6 +27,7 @@ dependencies = [
     "python-magic>=0.4.27",  # File type detection
     "pillow>=10.0.0",  # Image handling in documents
     "openpyxl>=3.1.0",  # Excel support (.xlsx)
+    "python-pptx>=0.6.23",  # PowerPoint support (.pptx)
 ]
 
 [project.optional-dependencies]

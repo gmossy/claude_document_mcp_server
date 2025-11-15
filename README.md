@@ -42,6 +42,7 @@ A production-ready, enterprise-grade Model Context Protocol (MCP) server that pr
 - **Microsoft Word** (.docx) - Read and write with metadata extraction
 - **PDF** - Read and create with multi-page support
 - **Microsoft Excel** (.xlsx) - Multi-sheet extraction and creation
+- **Microsoft PowerPoint** (.pptx) - Slide extraction and presentation creation
 - **Markdown** (.md) - Full support with formatting
 - **Plain Text** (.txt) - Universal compatibility
 
@@ -54,6 +55,7 @@ A production-ready, enterprise-grade Model Context Protocol (MCP) server that pr
 - **Pydantic v2** - Type-safe data validation and serialization
 - **openpyxl** - Excel file processing
 - **python-docx** - Word document manipulation
+- **python-pptx** - PowerPoint presentation handling
 - **pypdf & reportlab** - PDF reading and generation
 
 ### Design Patterns

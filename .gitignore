@@ -213,6 +213,11 @@ lerna-debug.log*
 test_word_pdf/
 test_excel_output.xlsx
 test_excel_multisheet.xlsx
+test_powerpoint_output.pptx
+test_powerpoint_simple.pptx
+test_powerpoint_with_charts.pptx
+sample_template.pptx
+presentation_from_template.pptx
 
 # Example files (optional - uncomment to exclude)
 example_files_created/DoD_TEMP_Example_Workflow.md
