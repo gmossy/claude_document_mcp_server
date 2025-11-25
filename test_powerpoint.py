@@ -122,7 +122,7 @@ def test_powerpoint_support():
         print(f"✅ Created: {test_file} ({test_file.stat().st_size} bytes)")
     except Exception as e:
         print(f"❌ Failed to create PowerPoint: {e}")
-        return False
+        assert False, f"Failed to create PowerPoint: {e}"
     
     # Test 2: Extract text from PowerPoint
     print("\n2. Extracting text from PowerPoint file...")
@@ -139,7 +139,7 @@ def test_powerpoint_support():
         print("-" * 50)
     except Exception as e:
         print(f"❌ Failed to extract text: {e}")
-        return False
+        assert False, f"Failed to extract text: {e}"
     
     # Test 3: Test auto-detection
     print("\n3. Testing auto-detection with extract_text_from_file...")
@@ -150,7 +150,7 @@ def test_powerpoint_support():
         print(f"✅ Slide count: {metadata2.get('slide_count')}")
     except Exception as e:
         print(f"❌ Failed auto-detection: {e}")
-        return False
+        assert False, f"Failed auto-detection: {e}"
     
     # Test 4: Create simple presentation
     print("\n4. Creating simple presentation...")
@@ -191,15 +191,13 @@ def test_powerpoint_support():
         
     except Exception as e:
         print(f"❌ Failed simple presentation test: {e}")
-        return False
+        assert False, f"Failed simple presentation test: {e}"
     
     print("\n" + "=" * 50)
     print("✅ All PowerPoint tests passed!")
     print("\nTest files created:")
     print(f"  - {test_file}")
     print(f"  - {simple_file}")
-    
-    return True
 
 if __name__ == "__main__":
     import sys

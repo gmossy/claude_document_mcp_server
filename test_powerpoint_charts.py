@@ -149,7 +149,7 @@ def test_powerpoint_charts():
         print(f"❌ Failed to create PowerPoint: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        assert False, f"Failed to create PowerPoint with charts: {e}"
     
     print("\n" + "=" * 50)
     print("✅ PowerPoint with charts created successfully!")
@@ -161,8 +161,6 @@ def test_powerpoint_charts():
     print("  - Pie chart (investment distribution)")
     print("  - Multi-series column chart (comparison)")
     print("  - Multi-series line chart (projections)")
-    
-    return True
 
 if __name__ == "__main__":
     import sys

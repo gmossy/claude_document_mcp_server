@@ -37,7 +37,7 @@ def test_template_inspection():
         print(f"✅ Created sample template: {template_file}")
     except Exception as e:
         print(f"❌ Failed to create template: {e}")
-        return False
+        assert False, f"Failed to create template: {e}"
     
     # Inspect the template layouts
     print("\n2. Inspecting template layouts...")
@@ -54,7 +54,7 @@ def test_template_inspection():
             print()
     except Exception as e:
         print(f"❌ Failed to inspect template: {e}")
-        return False
+        assert False, f"Failed to inspect template: {e}"
     
     # Create a presentation using the template
     print("\n3. Creating presentation from template...")
@@ -105,7 +105,7 @@ def test_template_inspection():
         print(f"❌ Failed to create presentation: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        assert False, f"Failed to create presentation from template: {e}"
     
     print("\n" + "=" * 50)
     print("✅ Template support working!")
@@ -121,8 +121,6 @@ def test_template_inspection():
     print("  3. Note the layout indices you want to use")
     print("  4. Create slides with layout_index parameter")
     print("  5. Pass template_path to create_powerpoint_from_slides()")
-    
-    return True
 
 if __name__ == "__main__":
     import sys
