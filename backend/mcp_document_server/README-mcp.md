@@ -62,6 +62,15 @@ npx @modelcontextprotocol/inspector --config inspector.config.json --server docu
 Then open the printed URL, ensure Transport Type is STDIO, click Connect, and select `document_mcp` to see tools.
 
 ### Docker
+### Database tables (auto-created)
+
+- `documents` – main document records
+- `document_versions` – version history per document
+- `documents_fts` – FTS index
+- `document_files` – on-disk exports tracked per version
+- `document_binary` – raw uploaded files (binary blobs + metadata)
+- `document_embeddings` – semantic chunks + embeddings
+
 
 ```bash
 cd backend/mcp_document_server

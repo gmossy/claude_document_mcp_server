@@ -22,6 +22,7 @@ from contextlib import asynccontextmanager
 
 from mcp.server.fastmcp import FastMCP, Context
 from pydantic import BaseModel, Field, field_validator, ConfigDict
+from document_parsers import create_pdf_from_text, create_docx_from_text
 
 # ============================================================================
 # Constants
@@ -403,6 +404,37 @@ class GetStatisticsInput(BaseModel):
     )
 
 
+class ExportFileInput(BaseModel):
+    """Input for exporting a document version to a versioned file on disk."""
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
+    
+    document_id: str = Field(
+        ...,
+        description="Unique document identifier",
+        min_length=1,
+        max_length=100,
+    )
+    version_number: Optional[int] = Field(
+        default=None,
+        description="Version to export (defaults to latest)."
+    )
+    format: str = Field(
+        ...,
+        description="Export format: markdown, txt, docx, pdf, or code",
+        pattern=r"^(markdown|txt|docx|pdf|code)$",
+    )
+    file_name: Optional[str] = Field(
+        default=None,
+        description="Optional file name (without directories). Uses a sanitized title if omitted.",
+        max_length=200,
+    )
+    code_extension: Optional[str] = Field(
+        default=None,
+        description="File extension for code exports (e.g., '.py', '.cpp', '.usd'). Required when format='code'.",
+        max_length=16,
+    )
+
+
 # ============================================================================
 # Database Management
 # ============================================================================
@@ -445,6 +477,57 @@ def init_database():
             content_hash TEXT NOT NULL,
             FOREIGN KEY (document_id) REFERENCES documents(id),
             UNIQUE(document_id, version_number)
+        )
+    """)
+    
+    # File-level versions for exported artifacts
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS document_files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id TEXT NOT NULL,
+            version_number INTEGER NOT NULL,
+            format TEXT NOT NULL,
+            path TEXT NOT NULL,
+            size INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (document_id) REFERENCES documents(id),
+            FOREIGN KEY (document_id, version_number) REFERENCES document_versions(document_id, version_number)
+        )
+    """)
+    
+    # Binary artifacts table (stores original uploaded files)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS document_binary (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id TEXT NOT NULL,
+            version_number INTEGER NOT NULL,
+            filename TEXT NOT NULL,
+            mime_type TEXT NOT NULL,
+            format TEXT NOT NULL,
+            content_blob BLOB NOT NULL,
+            size_bytes INTEGER NOT NULL,
+            checksum TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (document_id) REFERENCES documents(id),
+            FOREIGN KEY (document_id, version_number) REFERENCES document_versions(document_id, version_number),
+            UNIQUE(document_id, version_number, filename)
+        )
+    """)
+
+    # Embeddings table for semantic/vector search
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS document_embeddings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id TEXT NOT NULL,
+            version_number INTEGER NOT NULL,
+            chunk_index INTEGER NOT NULL,
+            embedding BLOB NOT NULL,
+            text TEXT NOT NULL,
+            metadata TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (document_id) REFERENCES documents(id),
+            FOREIGN KEY (document_id, version_number) REFERENCES document_versions(document_id, version_number),
+            UNIQUE(document_id, version_number, chunk_index)
         )
     """)
     
@@ -561,6 +644,13 @@ def extract_keywords(content: str, top_n: int = 10) -> list[str]:
     # Sort by frequency and return top N
     sorted_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
     return [word for word, _ in sorted_words[:top_n]]
+
+
+def sanitize_filename(name: str, default: str = "document") -> str:
+    """Create a filesystem-safe filename fragment."""
+    base = "".join(c if c.isalnum() or c in (" ", "-", "_") else "_" for c in (name or default))
+    base = "_".join(base.split())  # collapse whitespace to underscores
+    return base or default
 
 
 def format_document_markdown(doc: dict, include_content: bool = True, include_versions: bool = False) -> str:
@@ -1782,6 +1872,166 @@ async def document_export(params: ExportDocumentInput) -> str:
             "success": False,
             "error": f"Failed to export document: {str(e)}"
         }, indent=2)
+
+
+@mcp.tool(
+    name="document_export_file",
+    annotations={
+        "title": "Export Document to Versioned File",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": False,
+    },
+)
+async def document_export_file(params: ExportFileInput) -> str:
+    """Export a document version to a versioned file on disk and record it in the database.
+    
+    Files are stored under:
+        document_storage/<document_id>/v<version_number>/<file_name>.<ext>
+    
+    Supported formats:
+      - markdown -> .md
+      - txt      -> .txt
+      - docx     -> Word document (uses create_docx_from_text)
+      - pdf      -> PDF document (uses create_pdf_from_text)
+      - code     -> arbitrary text file with given code_extension (e.g. .py, .cpp, .usd)
+    
+    The created file is registered in the document_files table for auditability.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Determine version number and content source
+        if params.version_number is not None:
+            cursor.execute(
+                """
+                SELECT title, content
+                FROM document_versions
+                WHERE document_id = ? AND version_number = ?
+                """,
+                (params.document_id, params.version_number),
+            )
+            row = cursor.fetchone()
+            if not row:
+                conn.close()
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error": f"Version {params.version_number} not found for document '{params.document_id}'.",
+                    },
+                    indent=2,
+                )
+            version_number = params.version_number
+            title = row["title"]
+            content = row["content"]
+        else:
+            # Use latest version from main documents table
+            cursor.execute(
+                "SELECT title, content FROM documents WHERE id = ?", (params.document_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                conn.close()
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error": f"Document '{params.document_id}' not found.",
+                    },
+                    indent=2,
+                )
+            title = row["title"]
+            content = row["content"]
+            cursor.execute(
+                "SELECT MAX(version_number) AS v FROM document_versions WHERE document_id = ?",
+                (params.document_id,),
+            )
+            version_number = cursor.fetchone()["v"] or 1
+
+        # Resolve filename and extension
+        safe_title = sanitize_filename(params.file_name or title or params.document_id)
+        if params.format == "markdown":
+            ext = ".md"
+        elif params.format == "txt":
+            ext = ".txt"
+        elif params.format == "docx":
+            ext = ".docx"
+        elif params.format == "pdf":
+            ext = ".pdf"
+        elif params.format == "code":
+            if not params.code_extension:
+                conn.close()
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error": "code_extension is required when format='code'.",
+                    },
+                    indent=2,
+                )
+            ext = params.code_extension if params.code_extension.startswith(".") else f".{params.code_extension}"
+        else:
+            conn.close()
+            return json.dumps(
+                {"success": False, "error": f"Unsupported format: {params.format}"},
+                indent=2,
+            )
+
+        version_dir = DOCUMENTS_DIR / params.document_id / f"v{version_number}"
+        version_dir.mkdir(parents=True, exist_ok=True)
+        file_path = version_dir / f"{safe_title}{ext}"
+
+        # Create the file according to format
+        if params.format in {"markdown", "txt", "code"}:
+            # For now we use raw content; callers can store markdown or code as needed.
+            file_path.write_text(content, encoding="utf-8")
+        elif params.format == "docx":
+            create_docx_from_text(content, file_path, title)
+        elif params.format == "pdf":
+            create_pdf_from_text(content, file_path, title)
+
+        size = file_path.stat().st_size
+        created_at = get_current_timestamp()
+
+        cursor.execute(
+            """
+            INSERT INTO document_files (document_id, version_number, format, path, size, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                params.document_id,
+                version_number,
+                params.format,
+                str(file_path),
+                size,
+                created_at,
+            ),
+        )
+        conn.commit()
+        conn.close()
+
+        return json.dumps(
+            {
+                "success": True,
+                "document_id": params.document_id,
+                "version_number": version_number,
+                "format": params.format,
+                "path": str(file_path),
+                "size": size,
+                "created_at": created_at,
+                "message": f"Exported v{version_number} of '{title}' to {file_path}",
+            },
+            indent=2,
+        )
+
+    except Exception as e:
+        return json.dumps(
+            {
+                "success": False,
+                "error": f"Failed to export document file: {str(e)}",
+            },
+            indent=2,
+        )
 
 
 @mcp.tool(

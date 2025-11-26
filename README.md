@@ -552,6 +552,9 @@ The server uses SQLite with the following tables:
 1. **documents** - Main document storage
 2. **document_versions** - Version history
 3. **documents_fts** - Full-text search index (FTS5)
+4. **document_files** - Versioned export artifacts stored on disk
+5. **document_binary** - Raw uploaded files (binary BLOBs) with metadata
+6. **document_embeddings** - Text chunks + vector embeddings for semantic search
 
 Database and document storage are automatically initialized on first run.
 
