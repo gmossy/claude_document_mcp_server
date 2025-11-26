@@ -211,6 +211,9 @@ lerna-debug.log*
 
 # Test outputs
 test_word_pdf/
+tests/data/*.xlsx
+tests/data/*.pptx
+tests/data/Text_*.txt
 test_excel_output.xlsx
 test_excel_multisheet.xlsx
 test_powerpoint_output.pptx
@@ -235,3 +238,6 @@ uv.lock
 
 # Ruff
 .ruff_cache/
+
+# Test files directory
+testfiles/

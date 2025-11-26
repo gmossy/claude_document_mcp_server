@@ -15,7 +15,7 @@ Usage:
 
 Requirements:
     pip install requests
-    Or: pip install -r requirements-test.txt
+    Or: pip install -r backend/requirements-test.txt
 """
 
 import argparse
@@ -30,7 +30,7 @@ try:
 except ImportError:
     print("Error: 'requests' library not found.")
     print("Install it with: pip install requests")
-    print("Or: pip install -r requirements-test.txt")
+    print("Or: pip install -r backend/requirements-test.txt")
     sys.exit(1)
 
 

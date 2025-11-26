@@ -68,7 +68,7 @@ Option B — Config file
 ```
 
 ```bash
-npx @modelcontextprotocol/inspector --config inspector.config.json --server document-mcp
+npx @modelcontextprotocol/inspector --config config/inspector.config.json --server document-mcp
 ```
 
 Then open the printed URL, ensure Transport Type is STDIO, click Connect, and select `document_mcp` to see tools.

@@ -1,41 +1,88 @@
 services:
   api:
+    image: document-gateway-api:latest  # Custom image name
     build:
       context: .
       dockerfile: backend/app/Dockerfile
       # Enable BuildKit for better caching
       args:
         BUILDKIT_INLINE_CACHE: 1
-    ports:
-      - "8000:8000"
+    # No direct port exposure - accessed via nginx reverse proxy
+    expose:
+      - "8000"
     volumes:
       - ./data:/data
+    container_name: document-processing-gateway-api
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=sqlite:////data/documents.db
       - STORAGE_DIR=/data/document_storage
       - API_VERSION=0.1.0
       - ALLOW_ORIGINS=["*"]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz').read()"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    networks:
+      - app-network
 
   frontend:
+    image: document-gateway-frontend:latest  # Custom image name
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.frontend
       # Enable BuildKit for better caching
       args:
         BUILDKIT_INLINE_CACHE: 1
-        VITE_API_BASE_URL: http://localhost:8000/api/v1
-    ports:
-      - "8080:80"
+        # Use relative path - no CORS needed with nginx reverse proxy
+        VITE_API_BASE_URL: /api/v1
+    # No direct port exposure - served via nginx
     environment:
       - NODE_ENV=production
     depends_on:
       - api
     restart: unless-stopped
+    mem_limit: 256m
+    networks:
+      - app-network
+    # Share frontend build with nginx
+    volumes:
+      - frontend-dist:/usr/share/nginx/html
+
+  nginx:
+    image: document-gateway-nginx:latest  # Custom image name
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    ports:
+      - "80:80"
+    container_name: document-processing-gateway-nginx
+    depends_on:
+      - api
+      - frontend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+    # Use frontend build from frontend container
+    volumes:
+      - frontend-dist:/usr/share/nginx/html:ro
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  frontend-dist:
+    driver: local
 

@@ -475,7 +475,7 @@ class UploadDocumentResponse(BaseModel):
     description=(
         "Upload a document file and store it with automatic versioning. "
         "Supports Word (.docx), Excel (.xlsx), PDF (.pdf), OpenUSD (.usd, .usda, .usdc), "
-        "code files (.py, .js, .cpp, etc.), and markdown (.md) files. "
+        "code files (.py, .js, .cpp, .cue, etc.), and markdown (.md) files. "
         "Files are stored as-is without parsing or conversion."
     ),
     responses={
@@ -524,7 +524,7 @@ async def upload_document(
         description=(
             "Document file to upload. Supports: "
             "Word (.docx), Excel (.xlsx), PDF (.pdf), OpenUSD (.usd, .usda, .usdc), "
-            "code files (.py, .js, .cpp, etc.), markdown (.md), and other formats."
+            "code files (.py, .js, .cpp, .cue, etc.), markdown (.md), and other formats."
         ),
         examples=["test-report.pdf", "meeting_notes.docx", "presentation.pptx"]
     ),
@@ -564,7 +564,7 @@ async def upload_document(
     - Excel spreadsheets (.xlsx)
     - PDF files (.pdf)
     - OpenUSD files (.usd, .usda, .usdc)
-    - Code files (.py, .js, .cpp, etc.)
+    - Code files (.py, .js, .cpp, .cue, etc.)
     - Markdown files (.md)
     - Any other file format
 

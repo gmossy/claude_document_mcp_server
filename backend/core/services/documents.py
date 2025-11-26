@@ -761,7 +761,7 @@ class DocumentService:
             file_format: Export format ('markdown', 'txt', or 'code')
             version_number: Specific version (defaults to latest)
             file_name: Custom filename (defaults to document title)
-            code_extension: Required for code format (e.g., '.py', '.cpp', '.js')
+            code_extension: Required for code format (e.g., '.py', '.cpp', '.js', '.cue')
 
         Returns:
             Dictionary with path, size, version_number, title, etc.
@@ -1169,7 +1169,7 @@ class DocumentService:
         Stores the file as-is without parsing or conversion. The file is saved
         in a versioned directory structure. Supports all file formats including
         Word (.docx), Excel (.xlsx), PDF (.pdf), OpenUSD (.usd, .usda, .usdc),
-        code files, markdown, and any other format.
+        code files (.py, .js, .cpp, .cue, etc.), markdown, and any other format.
 
         Args:
             title: Document title (often derived from filename)

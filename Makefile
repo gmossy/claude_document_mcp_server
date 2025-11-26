@@ -41,7 +41,7 @@ test:
 
 # Run API endpoint tests
 test-api:
-	python3 test_all_endpoints.py
+	python3 tests/test_all_endpoints.py
 
 # Health check
 health:

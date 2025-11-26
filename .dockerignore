@@ -63,6 +63,7 @@ test_*.py
 tests/
 requirements-test.txt
 requirements-dev.txt
+# Note: tests/ and requirements files are now in backend/ or tests/
 
 # Build artifacts
 dist/

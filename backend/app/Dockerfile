@@ -22,7 +22,11 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pillow>=10.0.0 \
     openpyxl>=3.1.0 \
     python-pptx>=0.6.23 \
-    pydantic-settings>=2.0.0
+    pydantic-settings>=2.0.0 \
+    pytest>=7.0.0 \
+    pytest-asyncio>=0.23.0 \
+    httpx>=0.25.0 \
+    requests>=2.31.0
 
 # Copy application code maintaining backend structure
 COPY backend ./backend

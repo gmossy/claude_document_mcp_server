@@ -3,7 +3,7 @@
 > **Created by Glenn Mossy**  
   *Booz Allen Hamilton
 > *Sr. AI Software Developer & Data Scientist*  
-> November 27, 2024
+> November 27, 2025
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/MCP-1.0+-green.svg)](https://modelcontextprotocol.io/)
@@ -16,7 +16,7 @@ A production-ready, enterprise-grade **Document Library Management System** with
 ### Key Highlights
 
 - **13 Production-Ready MCP Tools** for complete document lifecycle management
-- **Multi-Format Support**: Word (.docx), Excel (.xlsx), PDF (.pdf), OpenUSD (.usd, .usda, .usdc), code files, and Markdown (.md)
+- **Multi-Format Support**: Word (.docx), Excel (.xlsx), PDF (.pdf), OpenUSD (.usd, .usda, .usdc), code files (.py, .js, .cpp, .cue, etc.), and Markdown (.md)
 - **Binary File Storage**: Files stored as-is without parsing or conversion
 - **Automatic Versioning**: Complete document history with version tracking
 - **Filename Search**: Search documents by filename, title, or metadata
@@ -53,7 +53,7 @@ All file formats are supported for upload and storage:
 - **PDF** (.pdf) - Binary storage
 - **Microsoft Excel** (.xlsx) - Binary storage
 - **OpenUSD** (.usd, .usda, .usdc) - Binary storage
-- **Code files** (.py, .js, .cpp, etc.) - Binary storage
+- **Code files** (.py, .js, .cpp, .cue, etc.) - Binary storage
 - **Markdown** (.md) - Binary storage
 - **Any other format** - Binary storage
 
@@ -66,6 +66,8 @@ All file formats are supported for upload and storage:
 - **Python 3.13** - Latest Python with performance improvements
 - **FastAPI** - Modern async web framework for REST API
 - **FastMCP** - Modern MCP server framework with async support
+- **React + Vite** - Modern frontend framework with fast build times
+- **Nginx** - Reverse proxy for production-ready deployment
 - **SQLite with FTS5** - Full-text search indexing for performance
 - **Pydantic v2** - Type-safe data validation and serialization
 - **Database Abstraction Layer** - SQLite and PostgreSQL adapters
@@ -106,7 +108,7 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv sync
 ```
 
-**Using pip:**
+#### Using pip
 
 ```bash
 cd backend/mcp_document_server
@@ -121,7 +123,7 @@ pip install -e .[dev]
 
 ### Running the Server
 
-**MCP Server (for MCP clients):**
+#### MCP Server (for MCP clients)
 
 ```bash
 cd backend/mcp_document_server
@@ -131,22 +133,62 @@ python document_mcp_server.py
 
 The server will start and wait for MCP protocol messages on stdin/stdout. It's designed to be used with MCP clients like Claude Desktop or the MCP Inspector.
 
-**FastAPI Server (for frontend/REST API):**
+#### Full Stack Application (Frontend + Backend + Nginx Reverse Proxy)
 
 ```bash
-# Using Docker (recommended)
+# Build all services
+docker-compose build
+
+# Start all services (recommended)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+#### Access Points
+
+- **Frontend**: <http://localhost/>
+- **API**: <http://localhost/api/v1/>
+- **API Documentation**: <http://localhost/docs>
+- **Health Check**: <http://localhost/healthz>
+
+#### Docker Image Names
+
+- `document-gateway-api:latest` - Backend API service
+- `document-gateway-frontend:latest` - Frontend React application
+- `document-gateway-nginx:latest` - Nginx reverse proxy
+
+#### Individual Services
+
+```bash
+# Start only backend API
 docker-compose up -d api
 
-# Or directly with uvicorn
+# Start only frontend
+docker-compose up -d frontend
+
+# Start only nginx
+docker-compose up -d nginx
+
+# Rebuild specific service
+docker-compose build api
+docker-compose build frontend
+docker-compose build nginx
+```
+
+#### Running Backend Directly (without Docker - Development Only)
+
+```bash
 cd backend
 source .venv/bin/activate
 uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 ```
 
-The FastAPI server will be available at `http://localhost:8000` with:
-- API endpoints: `http://localhost:8000/api/v1/`
-- Interactive docs: `http://localhost:8000/docs`
-- Health check: `http://localhost:8000/healthz`
+**Note**: When running directly (not via Docker), the backend will be available at `http://localhost:8000/api/v1`. This is for development/testing only. For production, use Docker with nginx (`http://localhost/api/v1`).
 
 ### Testing the Server
 
@@ -163,7 +205,7 @@ npx @modelcontextprotocol/inspector python backend/mcp_document_server/document_
 
 #### Option B — Using an Inspector config file
 
-1. Create `inspector.config.json` in the repo root:
+1. Create `config/inspector.config.json` in the repo root:
 
 ```json
 {
@@ -186,7 +228,7 @@ npx @modelcontextprotocol/inspector python backend/mcp_document_server/document_
 
 ```bash
 cd <project-root>
-npx @modelcontextprotocol/inspector --config inspector.config.json --server document-mcp
+npx @modelcontextprotocol/inspector --config config/inspector.config.json --server document-mcp
 ```
 
 Then:
@@ -657,116 +699,351 @@ Search tools support pagination with:
 
 The system provides a RESTful API for document management. The API is designed for frontend integration and supports standard HTTP methods with JSON responses.
 
-### Quick Start
+### 🚀 Accessing the FastAPI API
+
+**Important**: The API container runs on port 8000 internally, but it's **not directly exposed**. Instead, it's accessed through the nginx reverse proxy.
+
+#### Production Setup (Docker with Nginx - Recommended)
+
+When running with `docker-compose up`, access the API via nginx:
+
+- **API Base URL**: `http://localhost/api/v1`
+- **API Documentation (Swagger UI)**: `http://localhost/docs` or `http://localhost/api/v1/docs`
+- **ReDoc Documentation**: `http://localhost/redoc` or `http://localhost/api/v1/redoc`
+- **Health Check**: `http://localhost/api/v1/healthz`
+
+**Why no direct port?** The API container uses `expose: 8000` (not `ports:`), meaning it's only accessible within the Docker network. Nginx proxies requests from port 80 to the API container, providing:
+
+- ✅ Single entry point (port 80)
+- ✅ No CORS issues (same origin)
+- ✅ Better security (backend not directly exposed)
+- ✅ SSL-ready (nginx handles SSL termination)
+
+#### Direct Access (Development Only)
+
+If you need direct access to the API container (for debugging):
 
 ```bash
-# Start the API server
-docker-compose up -d api
+# Access API directly from within the container
+docker-compose exec api curl http://localhost:8000/api/v1/healthz
 
-# Or run directly
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+# Or expose port 8000 temporarily (add to docker-compose.yml):
+# ports:
+#   - "8000:8000"
 ```
 
-The API automatically initializes the database schema on startup. All endpoints are available at `http://localhost:8000/api/v1/`.
+#### Getting Started
 
-### Endpoints
+```bash
+# Start all services (API, Frontend, Nginx)
+docker-compose up -d
 
-#### Upload Document
+# Check API health
+curl http://localhost/api/v1/healthz
+
+# View API documentation
+# Open in browser: http://localhost/docs
+```
+
+The API automatically initializes the database schema on startup. All endpoints are available at `http://localhost/api/v1/` (via nginx) or `http://localhost:8000/api/v1/` (direct, if port exposed).
+
+### Complete API Endpoints Reference
+
+All endpoints are prefixed with `/api/v1`. Access via `http://localhost/api/v1` (nginx) or `http://localhost:8000/api/v1` (direct).
+
+#### Health & Status
+
+##### Health Check
+
+```http
+GET /api/v1/healthz
+GET /healthz  # Root level
+```
+
+**Response**: `{"status": "ok"}`
+
+#### Document Management
+
+##### 1. Upload Document
 
 ```http
 POST /api/v1/documents/upload
 Content-Type: multipart/form-data
-
-file: <binary file>
-title: "Optional title"
-tags: '["tag1", "tag2"]'
-status: "draft"
-metadata: '{"author": "John Doe"}'
 ```
 
-**Supported file types**: Word (.docx), Excel (.xlsx), PDF (.pdf), OpenUSD (.usd, .usda, .usdc), code files (.py, .js, .cpp, etc.), Markdown (.md), and any other format.
+**Form Fields:**
+
+- `file` (required): Binary file to upload
+- `title` (optional): Custom document title
+- `tags` (optional): JSON array string, e.g., `'["tag1", "tag2"]'`
+- `status` (optional): `draft`, `published`, or `archived` (default: `draft`)
+- `metadata` (optional): JSON object string, e.g., `'{"author": "John Doe"}'`
+
+**Supported file types**: Word (.docx), Excel (.xlsx), PDF (.pdf), OpenUSD (.usd, .usda, .usdc), code files (.py, .js, .cpp, .cue, etc.), Markdown (.md), Text (.txt), and any other format.
 
 **Response**: Document ID, version number, binary file metadata, and document information.
 
-**Frontend Integration**: This endpoint accepts standard `multipart/form-data` uploads, making it compatible with HTML file input elements and drag-and-drop interfaces.
-
-#### List Documents
+##### 2. List Documents
 
 ```http
-GET /api/v1/documents/?status=draft&tags=tag1,tag2&limit=50&offset=0&order_by=created_at&order_desc=true
+GET /api/v1/documents/
 ```
 
-**Features**: Pagination, filtering by status/tags, sorting.
+**Query Parameters:**
 
-#### Get Document by ID
+- `status` (optional): Filter by status (`draft`, `published`, `archived`)
+- `tags` (optional): Comma-separated tags (documents must have ALL tags)
+- `category` (optional): Filter by metadata category
+- `limit` (optional, default: 50): Max results (1-100)
+- `offset` (optional, default: 0): Pagination offset
+- `order_by` (optional, default: `created_at`): Sort field (`created_at`, `updated_at`, `title`, `status`)
+- `order_desc` (optional, default: `true`): Sort descending
+
+##### 3. Get Document by ID
 
 ```http
-GET /api/v1/documents/{document_id}?include_content=true&include_versions=false
+GET /api/v1/documents/{document_id}
 ```
 
-**Query Parameters**:
-- `include_content` (default: `true`) - Include full document content
-- `include_versions` (default: `false`) - Include version history
+**Query Parameters:**
 
-**Response**: Complete document information including metadata, tags, and optionally content and version history.
+- `include_content` (optional, default: `true`): Include full document content
+- `include_versions` (optional, default: `false`): Include version history
 
-#### Search by Filename
+##### 4. Create Document (Text)
 
 ```http
-GET /api/v1/search/?q=report.pdf&limit=50
+POST /api/v1/documents/
+Content-Type: application/json
 ```
 
-**Searches**: Document titles, stored filenames, and metadata.
+**Body**: JSON with `title`, `content`, `tags`, `status`, `metadata`
 
-#### Delete Document
+##### 5. Update Document
+
+```http
+PATCH /api/v1/documents/{document_id}
+Content-Type: application/json
+```
+
+**Body**: JSON with fields to update (`title`, `content`, `tags`, `status`, `metadata`)
+
+##### 6. Delete Document
 
 ```http
 DELETE /api/v1/documents/{document_id}?permanent=false
 ```
 
-**Options**: Archive (default) or permanent delete.
+**Query Parameters:**
 
-#### Health Check
+- `permanent` (optional, default: `false`): `true` for permanent delete, `false` for archive
+
+##### 7. Download Document Binary
 
 ```http
-GET /api/v1/healthz
+GET /api/v1/documents/{document_id}/download?version={version_number}
+```
+
+**Query Parameters:**
+
+- `version` (optional): Specific version number (default: latest)
+
+##### 8. Export Document
+
+```http
+GET /api/v1/documents/{document_id}/export?format={format}
+```
+
+**Query Parameters:**
+
+- `format` (optional): `markdown`, `json`, `txt` (default: `markdown`)
+
+##### 9. Get Document Version
+
+```http
+GET /api/v1/documents/{document_id}/versions/{version_number}
+```
+
+##### 10. Compare Versions
+
+```http
+GET /api/v1/documents/{document_id}/versions/{version_a}/compare/{version_b}
+```
+
+##### 11. Analyze Document
+
+```http
+GET /api/v1/documents/{document_id}/analyze
+```
+
+**Response**: Word count, reading time, keywords, statistics
+
+##### 12. Create File Document
+
+```http
+POST /api/v1/documents/create-file
+Content-Type: application/json
+```
+
+**Body**: JSON with `title`, `file_path`, `tags`, `status`, `metadata`
+
+##### 13. Bulk Tag Documents
+
+```http
+POST /api/v1/documents/bulk-tag
+Content-Type: application/json
+```
+
+**Body**: JSON with `document_ids` array, `add_tags`, `remove_tags`
+
+#### Search
+
+##### 1. Search by Filename/Title
+
+```http
+GET /api/v1/search/?q={query}&limit={limit}
+```
+
+**Query Parameters:**
+
+- `q` (required): Search query (filename, title, or partial match)
+- `limit` (optional, default: 50): Max results (1-100)
+
+**Searches**: Document titles, stored filenames, and metadata.
+
+##### 2. Semantic Search
+
+```http
+POST /api/v1/search/semantic
+Content-Type: application/json
+```
+
+**Body**: JSON with `query`, `limit`, `threshold`
+
+#### Analytics
+
+##### Analytics Overview
+
+```http
+GET /api/v1/analytics/overview
+```
+
+**Response**: System statistics, document counts, storage usage
+
+#### Tags
+
+##### List Tags
+
+```http
+GET /api/v1/tags/?sort_by_count=true&min_count=1
+```
+
+**Query Parameters:**
+
+- `sort_by_count` (optional, default: `false`): Sort by usage count
+- `min_count` (optional, default: 0): Minimum tag count to include
+
+#### Authentication (Placeholder)
+
+##### Login
+
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
+```
+
+**Body**: JSON with `username`, `password`
+
+##### Get Current User
+
+```http
+GET /api/v1/auth/me
 ```
 
 ### Example API Usage
 
-**Upload a Word document:**
+**All examples use the nginx proxy URL (`http://localhost/api/v1`). For direct access, replace with `http://localhost:8000/api/v1`.**
+
+**1. Upload a Word document:**
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/documents/upload" \
+curl -X POST "http://localhost/api/v1/documents/upload" \
   -F "file=@report.docx" \
   -F "title=Q4 Report" \
   -F "tags=[\"finance\", \"2024\"]" \
   -F "status=draft"
 ```
 
-**Search for files:**
+**2. Search for files:**
 
 ```bash
-curl "http://localhost:8000/api/v1/search/?q=report.pdf&limit=10"
+curl "http://localhost/api/v1/search/?q=report.pdf&limit=10"
 ```
 
-**List all documents:**
+**3. List all documents:**
 
 ```bash
-curl "http://localhost:8000/api/v1/documents/?limit=50&offset=0"
+curl "http://localhost/api/v1/documents/?limit=50&offset=0"
 ```
 
-**Get a document by ID:**
+**4. Get a document by ID:**
 
 ```bash
-curl "http://localhost:8000/api/v1/documents/doc_abc123?include_content=true"
+curl "http://localhost/api/v1/documents/doc_abc123?include_content=true"
 ```
 
-**Delete a document:**
+**5. Download document binary:**
 
 ```bash
-curl -X DELETE "http://localhost:8000/api/v1/documents/doc_abc123?permanent=false"
+curl -O "http://localhost/api/v1/documents/doc_abc123/download"
 ```
+
+**6. Delete a document (archive):**
+
+```bash
+curl -X DELETE "http://localhost/api/v1/documents/doc_abc123?permanent=false"
+```
+
+**7. Get analytics:**
+
+```bash
+curl "http://localhost/api/v1/analytics/overview"
+```
+
+**8. List tags:**
+
+```bash
+curl "http://localhost/api/v1/tags/?sort_by_count=true&min_count=1"
+```
+
+**9. Update document:**
+
+```bash
+curl -X PATCH "http://localhost/api/v1/documents/doc_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Updated Title", "tags": ["updated", "2024"]}'
+```
+
+**10. Compare versions:**
+
+```bash
+curl "http://localhost/api/v1/documents/doc_abc123/versions/1/compare/2"
+```
+
+### Interactive API Documentation
+
+#### Swagger UI (Recommended)
+
+- Open in browser: `http://localhost/docs` or `http://localhost/api/v1/docs`
+- Interactive interface to test all endpoints
+- See request/response schemas
+- Try endpoints directly from the browser
+
+#### ReDoc
+
+- Open in browser: `http://localhost/redoc` or `http://localhost/api/v1/redoc`
+- Clean, readable API documentation
+- All endpoints with detailed descriptions
 
 ## Integration Examples
 
@@ -808,13 +1085,16 @@ Add to your Claude Desktop config:
 
 ## Frontend
 
-The frontend UI is located in a separate repository:
+**Frontend Repository:**
 
-- **Repository**: `Physical-AI/Mission-Library`
-- **Branch**: `dotmilpf-frontend`
-- **URL**: `https://github.boozallencsn.com/Physical-AI/Mission-Library/tree/dotmilpf-frontend`
+The frontend UI is integrated in this repository under `frontend/`:
 
-The frontend communicates with this backend via the FastAPI REST API endpoints documented above.
+- **Location**: `frontend/` directory
+- **Technology**: React + Vite
+- **Build**: Docker multi-stage build with nginx
+- **Served by**: Nginx reverse proxy (production) or Vite dev server (development)
+
+The frontend communicates with the backend via the FastAPI REST API endpoints. With the nginx reverse proxy setup, both frontend and API are served from the same domain, eliminating CORS issues.
 
 ## Development
 
@@ -849,15 +1129,34 @@ dist/
 
 ### Frontend Integration
 
-The frontend UI connects to this backend API at:
+#### With Nginx Reverse Proxy (Production Setup)
 
-- **Base URL**: `http://localhost:8000/api/v1` (development)
-- **Health Check**: `GET /api/v1/healthz`
+The frontend UI and backend API are served through nginx reverse proxy:
+
+- **Frontend**: `http://localhost/`
+- **API Base URL**: `http://localhost/api/v1` (no CORS needed - same origin)
+- **Health Check**: `GET /healthz` or `GET /api/v1/healthz`
 - **Document Upload**: `POST /api/v1/documents/upload`
 - **Document List**: `GET /api/v1/documents/`
 - **Get Document**: `GET /api/v1/documents/{id}`
 - **Search**: `GET /api/v1/search/?q=filename`
 - **Delete**: `DELETE /api/v1/documents/{id}`
+
+#### Benefits of Reverse Proxy
+
+- ✅ No CORS configuration needed (same origin)
+- ✅ Backend not directly exposed (better security)
+- ✅ Gzip compression and caching
+- ✅ Single entry point (port 80)
+- ✅ Production-ready architecture
+
+#### Development Mode (Direct Access - Not Recommended for Production)
+
+If running backend directly without Docker (development/testing only):
+
+- **API Base URL**: `http://localhost:8000/api/v1`
+- CORS must be configured for cross-origin requests
+- **Note**: This bypasses the nginx reverse proxy. Use Docker with nginx for production deployments.
 
 ### Development Standards
 
@@ -953,7 +1252,7 @@ This project showcases proficiency in:
 
 ### Contact & Links
 
-- **Project Date**: November 27, 2024
+- **Project Date**: November 27, 2025
 - **Role**: Creator & Lead Developer
 
 ## Acknowledgments

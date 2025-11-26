@@ -90,4 +90,7 @@ register_tools(mcp)
 # ============================================================================
 
 if __name__ == "__main__":
+    # NOTE: MCP uses STDIN/STDOUT for protocol traffic.
+    # Any human-readable banner must go to STDERR to avoid breaking clients.
+    print("Starting Document Management MCP Server 'document_mcp'...", file=sys.stderr)
     mcp.run()
