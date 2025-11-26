@@ -2,12 +2,19 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
+# Install system dependencies in one layer (if needed)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmagic1 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy requirements first for better caching
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Install document parsing dependencies
-RUN pip install --no-cache-dir \
+# Install all Python dependencies in a single layer with cache mount
+# This allows pip to cache packages between builds
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir \
     python-docx>=1.1.0 \
     pypdf>=4.0.0 \
     reportlab>=4.0.0 \
@@ -20,23 +27,17 @@ RUN pip install --no-cache-dir \
 # Copy application code maintaining backend structure
 COPY backend ./backend
 
-# Set Python path to project root
-ENV PYTHONPATH=/app
-
-# Set Python path correctly
-ENV PYTHONPATH=/app
+# Set environment variables (consolidated)
+ENV PYTHONPATH=/app \
+    DATABASE_URL=sqlite:////data/documents.db \
+    STORAGE_DIR=/data/document_storage
 
 # Create data directory
 RUN mkdir -p /data
 VOLUME ["/data"]
 
-# Environment variables
-ENV DATABASE_URL=sqlite:////data/documents.db
-ENV STORAGE_DIR=/data/document_storage
-
 # Expose port
 EXPOSE 8000
 
-# Run the application (using backend.app.main since we maintain backend structure)
+# Run the application
 CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-

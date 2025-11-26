@@ -666,6 +666,9 @@ class DocumentService:
         if order_by not in valid_order_fields:
             order_by = "created_at"
         order_direction = "DESC" if order_desc else "ASC"
+        
+        # Prefix order_by with table alias to avoid ambiguity in JOIN queries
+        order_by_prefixed = f"d.{order_by}"
 
         # Get total count
         cursor = self.db_adapter.execute(
@@ -685,7 +688,7 @@ class DocumentService:
             FROM documents d
             LEFT JOIN document_binary db ON d.id = db.document_id
             WHERE {where_clause}
-            ORDER BY {order_by} {order_direction}
+            ORDER BY {order_by_prefixed} {order_direction}
             LIMIT {placeholder} OFFSET {placeholder}
             """,
             tuple(params + [limit, offset]),

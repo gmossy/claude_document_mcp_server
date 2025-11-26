@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: backend/app/Dockerfile
+      # Enable BuildKit for better caching
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     ports:
       - "8000:8000"
     volumes:
@@ -24,7 +27,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      # Enable BuildKit for better caching
       args:
+        BUILDKIT_INLINE_CACHE: 1
         VITE_API_BASE_URL: http://localhost:8000/api/v1
     ports:
       - "8080:80"
