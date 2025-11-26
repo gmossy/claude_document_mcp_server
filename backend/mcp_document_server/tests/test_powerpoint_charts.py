@@ -4,6 +4,14 @@ Test PowerPoint chart support in document_parsers module.
 """
 
 from pathlib import Path
+import sys
+
+# Ensure we can import document_parsers from backend/mcp_document_server
+THIS_DIR = Path(__file__).resolve().parent  # .../backend/mcp_document_server/tests
+MCP_DIR = THIS_DIR.parent  # .../backend/mcp_document_server
+if str(MCP_DIR) not in sys.path:
+    sys.path.insert(0, str(MCP_DIR))
+
 from document_parsers import create_powerpoint_from_slides
 
 def test_powerpoint_charts():

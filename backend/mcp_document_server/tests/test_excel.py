@@ -4,10 +4,20 @@ Test Excel support in document_parsers module.
 """
 
 from pathlib import Path
+import sys
+
+from pathlib import Path
+
+# Ensure we can import document_parsers from backend/mcp_document_server
+THIS_DIR = Path(__file__).resolve().parent  # .../backend/mcp_document_server/tests
+MCP_DIR = THIS_DIR.parent  # .../backend/mcp_document_server
+if str(MCP_DIR) not in sys.path:
+    sys.path.insert(0, str(MCP_DIR))
+
 from document_parsers import (
     extract_text_from_excel,
     create_excel_from_data,
-    extract_text_from_file
+    extract_text_from_file,
 )
 
 def test_excel_support():

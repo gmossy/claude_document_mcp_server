@@ -81,31 +81,26 @@ A production-ready, enterprise-grade Model Context Protocol (MCP) server that pr
 # Install UV if you haven't already
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Navigate to project directory
-cd document_mcp_server
+# Navigate to MCP document server subproject
+cd backend/mcp_document_server
 
-# Install Python 3.13 and create virtual environment
+# Install Python 3.13 and sync dependencies
 uv python install 3.13
 uv venv --python 3.13
-
-# Activate virtual environment
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
 uv sync
 ```
 
 **Using pip:**
 ```bash
+cd backend/mcp_document_server
+
 # Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -e .
-
-# Or install dependencies directly
-pip install mcp pydantic httpx
+pip install -e .[dev]
 ```
 
 ### Running the Server
@@ -113,10 +108,8 @@ pip install mcp pydantic httpx
 The server runs using stdio transport for MCP communication:
 
 ```bash
-# Activate your virtual environment first
+cd backend/mcp_document_server
 source .venv/bin/activate  # or source venv/bin/activate
-
-# Run the server
 python document_mcp_server.py
 ```
 
@@ -126,17 +119,140 @@ The server will start and wait for MCP protocol messages on stdin/stdout. It's d
 
 **Option 1: MCP Inspector (Recommended)**
 
-The MCP Inspector provides a web UI to interact with your server:
+The MCP Inspector provides a web UI to interact with your server. Use one of the following:
+
+Option A — Direct (no config, simplest)
 
 ```bash
-# Install and run MCP Inspector
-npx @modelcontextprotocol/inspector python document_mcp_server.py
+cd /Users/glennmossy/dpg-ai-projects/claude_document_mcp_server
+npx @modelcontextprotocol/inspector python backend/mcp_document_server/document_mcp_server.py
 ```
 
-This will:
-1. Start your MCP server
-2. Open a web interface at http://localhost:5173
-3. Let you test all tools interactively with a visual interface
+Option B — Using an Inspector config file
+
+1) Create `inspector.config.json` in the repo root:
+
+```json
+{
+  "mcpServers": {
+    "document-mcp": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "backend/mcp_document_server",
+        "python",
+        "document_mcp_server.py"
+      ]
+    }
+  }
+}
+```
+
+2) Start Inspector with that server:
+
+```bash
+cd /Users/glennmossy/dpg-ai-projects/claude_document_mcp_server
+npx @modelcontextprotocol/inspector --config inspector.config.json --server document-mcp
+```
+
+Then:
+- Open the URL printed in the terminal (contains MCP_PROXY_AUTH_TOKEN).
+- In the left panel, Transport Type should be STDIO. Click Connect.
+- In the sidebar, select server `document_mcp` to see the tools.
+
+Troubleshooting:
+- If you see HTTP 404 or “Connection Error” when using Streamable HTTP, switch to STDIO and click Connect (this server does not expose /sse).
+- If Inspector says the server isn’t found, ensure your config uses the key `mcpServers` (not `servers`) and you passed `--config`.
+- If you accidentally launched bare `npx` and dropped into `sh-3.2$`, type `exit` and run the full command.
+
+### JSON examples you can paste into MCP Inspector
+
+All tools accept JSON. Below are ready-to-paste examples for common tasks.
+
+- List ALL documents (paginate, newest first) — use tool `document_search`
+
+```json
+{
+  "response_format": "json",
+  "limit": 100,
+  "offset": 0
+}
+```
+
+- Search by keywords and tags — use tool `document_search`
+
+```json
+{
+  "query": "quarterly report",
+  "tags": ["finance", "2024"],
+  "status": "published",
+  "limit": 20,
+  "offset": 0,
+  "response_format": "json"
+}
+```
+
+- Create a document — use tool `document_create`
+
+```json
+{
+  "title": "Q4 Report",
+  "content": "Executive summary...\n\nHighlights...",
+  "tags": ["finance", "2024"],
+  "status": "draft",
+  "metadata": { "author": "Glenn", "department": "Finance" }
+}
+```
+
+- Get a document (with content and versions) — use tool `document_get`
+
+```json
+{
+  "document_id": "doc_abc123def456",
+  "include_content": true,
+  "include_versions": true,
+  "response_format": "json"
+}
+```
+
+- Update a document (creates version if content changes) — use tool `document_update`
+
+```json
+{
+  "document_id": "doc_abc123def456",
+  "content": "Updated body...",
+  "tags": ["finance", "2024", "reviewed"],
+  "version_comment": "Added CFO notes"
+}
+```
+
+- Archive vs permanently delete — use tool `document_delete`
+
+Archive (default):
+```json
+{ "document_id": "doc_abc123def456", "permanent": false }
+```
+Permanent delete:
+```json
+{ "document_id": "doc_abc123def456", "permanent": true }
+```
+
+- List all tags — use tool `document_list_tags`
+
+```json
+{
+  "sort_by_count": true,
+  "min_count": 1,
+  "response_format": "json"
+}
+```
+
+- System statistics — use tool `document_statistics`
+
+```json
+{ "response_format": "json" }
+```
 
 **Option 2: Manual Testing with Claude Desktop**
 
@@ -150,7 +266,7 @@ Add to your Claude Desktop config file:
   "mcpServers": {
     "document-mcp": {
       "command": "python",
-      "args": ["/absolute/path/to/document_mcp_server.py"],
+      "args": ["/absolute/path/to/backend/mcp_document_server/document_mcp_server.py"],
       "env": {
         "PYTHONPATH": "/absolute/path/to/.venv/lib/python3.13/site-packages"
       }
@@ -507,13 +623,23 @@ Add to your Claude Desktop config:
 ## Development
 
 ### Project Structure
-```
-document_mcp/
-├── document_mcp_server.py    # Main server implementation
-├── pyproject.toml            # Project configuration
-├── README.md                 # This file
-├── documents.db              # SQLite database (auto-created)
-└── document_storage/         # Storage directory (auto-created)
+
+```text
+backend/
+  mcp_document_server/
+    document_mcp_server.py    # Main MCP server implementation
+    document_parsers.py       # Document parsing utilities (Word, PDF, Excel, PPTX, etc.)
+    docs/                     # MCP/server docs
+    document_storage/         # Storage directory (auto-created)
+    documents.db              # SQLite database (auto-created)
+    tests/                    # Test suite and sample office files
+    pyproject.toml            # MCP server project configuration
+    uv.lock                   # uv dependency lockfile
+    Dockerfile                # Container image for this server
+    README-mcp.md             # Subproject README
+
+dist/
+  document_mcp-*.whl, *.tar.gz # Built artifacts
 ```
 
 ### Code Quality

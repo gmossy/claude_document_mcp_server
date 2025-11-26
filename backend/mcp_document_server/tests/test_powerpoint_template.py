@@ -4,9 +4,17 @@ Test PowerPoint template support - demonstrates using branded templates.
 """
 
 from pathlib import Path
+import sys
+
+# Ensure we can import document_parsers from backend/mcp_document_server
+THIS_DIR = Path(__file__).resolve().parent  # .../backend/mcp_document_server/tests
+MCP_DIR = THIS_DIR.parent  # .../backend/mcp_document_server
+if str(MCP_DIR) not in sys.path:
+    sys.path.insert(0, str(MCP_DIR))
+
 from document_parsers import (
     create_powerpoint_from_slides,
-    get_powerpoint_template_layouts
+    get_powerpoint_template_layouts,
 )
 
 def test_template_inspection():

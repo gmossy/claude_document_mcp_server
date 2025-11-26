@@ -1,7 +1,14 @@
 import json
 from pathlib import Path
+import sys
 
 import pytest
+
+# Ensure we can import the MCP server module from backend/mcp_document_server
+THIS_DIR = Path(__file__).resolve().parent  # .../backend/mcp_document_server/tests
+MCP_DIR = THIS_DIR.parent  # .../backend/mcp_document_server
+if str(MCP_DIR) not in sys.path:
+    sys.path.insert(0, str(MCP_DIR))
 
 import document_mcp_server as server
 from document_parsers import extract_text_from_file

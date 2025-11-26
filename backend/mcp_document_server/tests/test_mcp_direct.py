@@ -16,8 +16,9 @@ def test_server():
     print("🧪 Testing MCP Server Directly")
     print("=" * 50)
     
-    # Start the server using the current interpreter from this repository root
-    repo_root = Path(__file__).parent
+    # Start the server using the current interpreter from the mcp_document_server dir
+    # __file__ is in backend/mcp_document_server/tests, so we go up one level
+    repo_root = Path(__file__).resolve().parent.parent  # backend/mcp_document_server
     server_path = sys.executable
     script_path = str(repo_root / "document_mcp_server.py")
     

@@ -2,7 +2,7 @@
 name = "document-mcp"
 version = "1.0.0"
 description = "A comprehensive MCP server for document management with versioning, search, and analysis"
-readme = "README.md"
+readme = "README-mcp.md"
 requires-python = ">=3.13"
 license = {text = "MIT"}
 authors = [
