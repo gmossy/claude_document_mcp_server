@@ -14,6 +14,7 @@ A comprehensive MCP server for document management with features including:
 import json
 import hashlib
 import sqlite3
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Any
@@ -23,14 +24,19 @@ from contextlib import asynccontextmanager
 from mcp.server.fastmcp import FastMCP, Context
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from document_parsers import create_pdf_from_text, create_docx_from_text
+
+# Ensure repository root is importable for shared services
+SCRIPT_DIR = Path(__file__).parent.absolute()
+REPO_ROOT = SCRIPT_DIR.parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from backend.core.services.documents import DocumentService
 
 # ============================================================================
 # Constants
 # ============================================================================
 
-# Get the directory where this script is located
-SCRIPT_DIR = Path(__file__).parent.absolute()
 DATABASE_PATH = SCRIPT_DIR / "documents.db"
 DOCUMENTS_DIR = SCRIPT_DIR / "document_storage"
 MAX_CONTENT_SIZE = 10 * 1024 * 1024  # 10MB
