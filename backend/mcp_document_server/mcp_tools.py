@@ -23,6 +23,7 @@ from backend.mcp_document_server.mcp_models import (
     CompareVersionsInput,
     CreateDocumentInput,
     DeleteDocumentInput,
+    DownloadFileInput,
     ExportDocumentInput,
     ExportFileInput,
     GetDocumentInput,
@@ -51,6 +52,7 @@ def register_tools(mcp_instance: "FastMCP") -> None:
     mcp_instance.tool()(document_analyze)
     mcp_instance.tool()(document_export)
     mcp_instance.tool()(document_export_file)
+    mcp_instance.tool()(document_download_file)
     mcp_instance.tool()(document_bulk_tag)
     mcp_instance.tool()(document_statistics)
 
@@ -525,6 +527,41 @@ async def document_export_file(params: ExportFileInput) -> str:
         return json.dumps({"error": str(e)}, indent=2)
 
 
+async def document_download_file(params: DownloadFileInput) -> str:
+    """
+    Get information about downloading the original binary file for a document.
+
+    Returns metadata about the binary file including download URL.
+    The actual file download should be done via GET /api/v1/documents/{document_id}/download
+    """
+    from backend.mcp_document_server.document_mcp_server import document_service
+
+    binary_data = document_service.get_binary_file(
+        document_id=params.document_id,
+        version_number=params.version_number,
+    )
+
+    if not binary_data:
+        error_msg = f"Binary file not found for document '{params.document_id}'"
+        if params.version_number:
+            error_msg += f" version {params.version_number}"
+        return json.dumps({"error": error_msg}, indent=2)
+
+    result = {
+        "document_id": params.document_id,
+        "version_number": params.version_number or "latest",
+        "filename": binary_data["filename"],
+        "mime_type": binary_data["mime_type"],
+        "format": binary_data["format"],
+        "size_bytes": binary_data["size_bytes"],
+        "download_url": f"/api/v1/documents/{params.document_id}/download",
+    }
+    if params.version_number:
+        result["download_url"] += f"?version_number={params.version_number}"
+
+    return json.dumps(result, indent=2)
+
+
 # ============================================================================
 # Bulk Operations
 # ============================================================================
@@ -636,6 +673,7 @@ __all__ = [
     "document_analyze",
     "document_export",
     "document_export_file",
+    "document_download_file",
     "document_bulk_tag",
     "document_statistics",
     "register_tools",

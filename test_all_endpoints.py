@@ -21,6 +21,7 @@ Requirements:
 import argparse
 import json
 import sys
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -99,9 +100,22 @@ class EndpointTester:
         """Test document upload endpoint."""
         self.print_test("Document Upload")
         try:
+            import random
+            
+            # Generate random filename with file type prefix
+            random_id = uuid.uuid4().hex[:8]
+            filename = f"Text_{random_id}.txt"
+            
+            # Generate random file size between 100 and 200,000 bytes
+            base_text = "This is a test document for API testing.\n"
+            target_size = random.randint(100, 200000)
+            multiplier = max(1, target_size // len(base_text))
+            content = base_text * multiplier
+            content = content[:target_size]  # Trim to exact size
+            
             # Create a test document file
-            test_file = Path("test_upload_document.txt")
-            test_file.write_text("This is a test document for API testing.\n" * 10)
+            test_file = Path(filename)
+            test_file.write_text(content)
             
             form_data = {
                 'title': 'API Test Document',
@@ -114,7 +128,7 @@ class EndpointTester:
                 })
             }
             
-            files = {'file': ('test_upload_document.txt', test_file.open('rb'), 'text/plain')}
+            files = {'file': (filename, test_file.open('rb'), 'text/plain')}
             
             response = self.session.post(
                 f"{self.api_base}/documents/upload",

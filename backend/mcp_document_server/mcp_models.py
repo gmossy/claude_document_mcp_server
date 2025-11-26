@@ -425,3 +425,19 @@ class ExportFileInput(BaseModel):
         max_length=16,
     )
 
+
+class DownloadFileInput(BaseModel):
+    """Input for downloading a document's binary file."""
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
+
+    document_id: str = Field(
+        ...,
+        description="Unique document identifier",
+        min_length=1,
+        max_length=100,
+    )
+    version_number: Optional[int] = Field(
+        default=None,
+        description="Specific version to download (defaults to latest version)."
+    )
+

@@ -2,6 +2,7 @@
 """Test upload, versioning, search, and delete for all file types."""
 
 import sys
+import uuid
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent
@@ -42,6 +43,8 @@ with TemporaryDirectory() as tmpdir:
     print("=" * 70)
     print()
     
+    import random
+    
     file_types = {
         "Word": (".docx", b"PK\x03\x04", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
         "Excel": (".xlsx", b"PK\x03\x04", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
@@ -51,13 +54,37 @@ with TemporaryDirectory() as tmpdir:
         "Markdown": (".md", b"# Test Document", "text/markdown"),
     }
     
+    def generate_random_content(base_content, min_size=100, max_size=200000):
+        """Generate content with random size between min_size and max_size bytes."""
+        target_size = random.randint(min_size, max_size)
+        # Repeat base content to reach target size
+        multiplier = max(1, target_size // len(base_content))
+        content = base_content * multiplier
+        # Trim to exact size
+        return content[:target_size]
+    
     uploaded_docs = {}
     
     # Test upload for each file type
     print("1. Testing Upload for All File Types")
     print("-" * 70)
-    for file_type, (ext, content, mime_type) in file_types.items():
-        filename = f"test{ext}"
+    for file_type, (ext, base_content, mime_type) in file_types.items():
+        # Generate random filename with file type prefix
+        random_id = uuid.uuid4().hex[:8]
+        # Map file types to prefixes
+        type_prefix = {
+            "Word": "Word",
+            "Excel": "Excel",
+            "PDF": "PDF",
+            "OpenUSD": "USD",
+            "Code (Python)": "Python",
+            "Markdown": "Markdown"
+        }.get(file_type, "Other")
+        filename = f"{type_prefix}_{random_id}{ext}"
+        
+        # Generate random file size between 100 and 200,000 bytes
+        content = generate_random_content(base_content, min_size=100, max_size=200000)
+        
         response = client.post(
             "/api/v1/documents/upload",
             files={"file": (filename, content, mime_type)},
@@ -78,11 +105,13 @@ with TemporaryDirectory() as tmpdir:
     print("2. Testing Versioning")
     print("-" * 70)
     test_doc_id = list(uploaded_docs.values())[0]
-    # Upload new version
+    # Upload new version with random filename and file type prefix
+    random_id = uuid.uuid4().hex[:8]
+    version_filename = f"Word_v2_{random_id}.docx"
     response = client.post(
         "/api/v1/documents/upload",
-        files={"file": ("test_v2.docx", b"PK\x03\x04", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
-        data={"title": "test.docx", "tags": '["word", "test"]'}
+        files={"file": (version_filename, b"PK\x03\x04", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+        data={"title": version_filename, "tags": '["word", "test"]'}
     )
     assert response.status_code == 200
     print(f"   ✓ Versioning works (upload creates new versions)")

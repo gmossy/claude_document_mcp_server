@@ -109,5 +109,11 @@ async def me():
     This endpoint is currently a placeholder and will be fully implemented
     to return the authenticated user's information from the session/token.
     """
-    return {"user": "placeholder"}
+    return {
+        "user": {
+            "id": "placeholder",
+            "email": "placeholder@example.com",
+            "name": "Placeholder User"
+        }
+    }
 

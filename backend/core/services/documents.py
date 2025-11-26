@@ -614,6 +614,7 @@ class DocumentService:
         *,
         status: Optional[str] = None,
         tags: Optional[list[str]] = None,
+        category: Optional[str] = None,
         limit: int = 50,
         offset: int = 0,
         order_by: str = "created_at",
@@ -625,6 +626,7 @@ class DocumentService:
         Args:
             status: Filter by document status (draft/published/archived)
             tags: Filter by tags (documents must have all specified tags)
+            category: Filter by metadata.category field
             limit: Maximum number of documents to return
             offset: Number of documents to skip
             order_by: Field to order by (created_at, updated_at, title)
@@ -651,6 +653,12 @@ class DocumentService:
                 conditions.append(f"tags LIKE {placeholder}")
                 params.append(f'%"{tag}"%')
 
+        if category:
+            # Filter by metadata.category field
+            # Metadata is stored as JSON, so we check for the category field
+            conditions.append(f"metadata LIKE {placeholder}")
+            params.append(f'%"category"%"{category}"%')
+
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         # Validate order_by field
@@ -668,12 +676,14 @@ class DocumentService:
         total_row = self.db_adapter.fetchone(cursor)
         total = total_row["total"] if total_row else 0
 
-        # Get documents (without content for performance)
+        # Get documents with binary format info (without content for performance)
         cursor = self.db_adapter.execute(
             conn,
             f"""
-            SELECT id, title, status, tags, created_at, updated_at, size, metadata
-            FROM documents
+            SELECT d.id, d.title, d.status, d.tags, d.created_at, d.updated_at, d.size, d.metadata,
+                   db.format, db.filename, db.mime_type
+            FROM documents d
+            LEFT JOIN document_binary db ON d.id = db.document_id
             WHERE {where_clause}
             ORDER BY {order_by} {order_direction}
             LIMIT {placeholder} OFFSET {placeholder}
@@ -692,6 +702,15 @@ class DocumentService:
                 except (json.JSONDecodeError, TypeError):
                     metadata = {}
             
+            # Build binary info if available
+            binary_info = None
+            if row.get("format") or row.get("filename"):
+                binary_info = {
+                    "format": row.get("format", "").lower() if row.get("format") else None,
+                    "filename": row.get("filename"),
+                    "mime_type": row.get("mime_type")
+                }
+            
             documents.append(
                 {
                     "id": row["id"],
@@ -702,6 +721,7 @@ class DocumentService:
                     "size": row["size"],
                     "tags": json.loads(row["tags"]) if row.get("tags") else [],
                     "metadata": metadata,
+                    "binary": binary_info,
                 }
             )
 
@@ -1067,6 +1087,65 @@ class DocumentService:
         self.db_adapter.commit(conn)
         self.db_adapter.close(conn)
         return size
+
+    def get_binary_file(
+        self,
+        *,
+        document_id: str,
+        version_number: Optional[int] = None,
+    ) -> Optional[dict[str, Any]]:
+        """
+        Retrieve binary file content for a document.
+
+        Args:
+            document_id: Document identifier
+            version_number: Specific version to retrieve (defaults to latest)
+
+        Returns:
+            Dictionary with filename, mime_type, format, and content_bytes, or None if not found
+        """
+        conn = self._connect()
+        placeholder = self.db_adapter.get_parameter_placeholder()
+
+        if version_number:
+            cursor = self.db_adapter.execute(
+                conn,
+                f"""
+                SELECT filename, mime_type, format, content_blob, size_bytes
+                FROM document_binary
+                WHERE document_id = {placeholder} AND version_number = {placeholder}
+                ORDER BY version_number DESC
+                LIMIT 1
+                """,
+                (document_id, version_number),
+            )
+        else:
+            # Get latest version
+            cursor = self.db_adapter.execute(
+                conn,
+                f"""
+                SELECT filename, mime_type, format, content_blob, size_bytes
+                FROM document_binary
+                WHERE document_id = {placeholder}
+                ORDER BY version_number DESC
+                LIMIT 1
+                """,
+                (document_id,),
+            )
+
+        row = self.db_adapter.fetchone(cursor)
+        self.db_adapter.close(conn)
+
+        if not row:
+            return None
+
+        return {
+            "filename": row["filename"],
+            "mime_type": row["mime_type"],
+            "format": row["format"],
+            "content_bytes": row["content_blob"],
+            "size_bytes": row["size_bytes"],
+        }
 
     def create_document_from_upload(
         self,

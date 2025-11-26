@@ -1,10 +1,5 @@
 FROM python:3.13-slim
 
-# Install system dependencies for document parsing
-RUN apt-get update && apt-get install -y \
-    libmagic1 \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 # Copy requirements first for better caching

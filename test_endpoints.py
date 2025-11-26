@@ -13,6 +13,7 @@ from backend.app.main import create_app
 from backend.core.services import DocumentService
 from backend.core.db import SQLiteAdapter
 from tempfile import TemporaryDirectory
+import uuid
 
 # Create test app
 app = create_app()
@@ -62,11 +63,21 @@ with TemporaryDirectory() as tmpdir:
     print()
     
     # Test 3: Upload Document
+    import random
     print("3. Testing POST /api/v1/documents/upload")
-    test_file_content = b"This is a test document file content."
+    # Generate random filename with file type prefix
+    random_id = uuid.uuid4().hex[:8]
+    filename = f"Text_{random_id}.txt"
+    
+    # Generate random file size between 100 and 200,000 bytes
+    base_content = b"This is a test document file content."
+    target_size = random.randint(100, 200000)
+    multiplier = max(1, target_size // len(base_content))
+    test_file_content = base_content * multiplier
+    test_file_content = test_file_content[:target_size]  # Trim to exact size
     response = client.post(
         "/api/v1/documents/upload",
-        files={"file": ("test.txt", test_file_content, "text/plain")},
+        files={"file": (filename, test_file_content, "text/plain")},
         data={
             "title": "Test Document",
             "tags": '["test", "upload"]',

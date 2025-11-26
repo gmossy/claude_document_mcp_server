@@ -19,6 +19,8 @@ from fastapi import (
     Query,
     Response,
 )
+from fastapi.responses import StreamingResponse
+from io import BytesIO
 from pydantic import BaseModel, Field
 
 from backend.core.services import DocumentService
@@ -155,6 +157,11 @@ async def list_documents(
         description="Comma-separated list of tags to filter by (documents must have all tags)",
         examples=["ai-testing,engineering", "meetings"]
     ),
+    category: Optional[str] = Query(
+        None,
+        description="Filter by metadata category (DOTMLPF-P category)",
+        examples=["Training", "Doctrine", "Organization", "Materiel", "Leadership", "Personnel", "Facilities", "Policy"]
+    ),
     limit: int = Query(
         50,
         ge=1,
@@ -186,16 +193,17 @@ async def list_documents(
     Returns a paginated list of documents with their metadata. Supports:
     - Filtering by status (draft, published, archived)
     - Filtering by tags (comma-separated, documents must have all specified tags)
+    - Filtering by category (metadata.category field)
     - Pagination via limit and offset
     - Sorting by created_at, updated_at, title, or status
 
     Example:
-        GET /api/v1/documents/?status=draft&tags=finance,2024
+        GET /api/v1/documents/?status=draft&tags=finance,2024&category=Training
         &limit=50&offset=0&order_by=created_at&order_desc=true
     """
     logger.info(
-        "Listing documents: status=%s, tags=%s, limit=%s, offset=%s, order_by=%s",
-        status, tags, limit, offset, order_by
+        "Listing documents: status=%s, tags=%s, category=%s, limit=%s, offset=%s, order_by=%s",
+        status, tags, category, limit, offset, order_by
     )
     tags_list = None
     if tags:
@@ -207,6 +215,7 @@ async def list_documents(
         result = service.list_documents(
             status=status,
             tags=tags_list,
+            category=category,
             limit=limit,
             offset=offset,
             order_by=order_by,
@@ -1616,4 +1625,101 @@ async def export_document(
     except Exception as e:
         logger.error("Error exporting document: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to export document") from e
+
+
+@router.get(
+    "/{document_id}/download",
+    summary="Download document binary file",
+    description=(
+        "Download the original binary file for a document. "
+        "Returns the file as it was uploaded, without any conversion."
+    ),
+    responses={
+        200: {
+            "description": "File downloaded successfully",
+            "content": {
+                "application/octet-stream": {
+                    "schema": {"type": "string", "format": "binary"}
+                }
+            }
+        },
+        404: {
+            "description": "Document or file not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Document or binary file not found."}
+                }
+            }
+        }
+    }
+)
+async def download_document_file(
+    document_id: str,
+    version_number: Optional[int] = Query(
+        None,
+        description="Specific version to download (defaults to latest)",
+        examples=[1, 2]
+    ),
+    service: DocumentService = Depends(get_document_service),
+):
+    """
+    Download the original binary file for a document.
+
+    Returns the file exactly as it was uploaded, without any parsing,
+    conversion, or modification. Supports all file formats.
+
+    Query Parameters:
+    - version_number: Optional version number (defaults to latest version)
+
+    Example:
+        GET /api/v1/documents/doc_abc123/download
+        GET /api/v1/documents/doc_abc123/download?version_number=2
+    """
+    logger.info(
+        "Download request: document_id=%s, version_number=%s",
+        document_id, version_number
+    )
+
+    try:
+        binary_data = service.get_binary_file(
+            document_id=document_id,
+            version_number=version_number,
+        )
+
+        if not binary_data:
+            logger.warning(
+                "Binary file not found: document_id=%s, version_number=%s",
+                document_id, version_number
+            )
+            raise HTTPException(
+                status_code=404,
+                detail="Document or binary file not found."
+            )
+
+        filename = binary_data["filename"]
+        mime_type = binary_data["mime_type"] or "application/octet-stream"
+        content_bytes = binary_data["content_bytes"]
+
+        logger.info(
+            "Serving file: document_id=%s, filename=%s, size=%s bytes",
+            document_id, filename, len(content_bytes)
+        )
+
+        # Return file as streaming response
+        return StreamingResponse(
+            BytesIO(content_bytes),
+            media_type=mime_type,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Length": str(len(content_bytes)),
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error downloading file: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=500, detail="Failed to download file"
+        ) from e
 
