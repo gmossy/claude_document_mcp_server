@@ -698,6 +698,18 @@ GET /api/v1/documents/?status=draft&tags=tag1,tag2&limit=50&offset=0&order_by=cr
 
 **Features**: Pagination, filtering by status/tags, sorting.
 
+#### Get Document by ID
+
+```http
+GET /api/v1/documents/{document_id}?include_content=true&include_versions=false
+```
+
+**Query Parameters**:
+- `include_content` (default: `true`) - Include full document content
+- `include_versions` (default: `false`) - Include version history
+
+**Response**: Complete document information including metadata, tags, and optionally content and version history.
+
 #### Search by Filename
 
 ```http
@@ -742,6 +754,12 @@ curl "http://localhost:8000/api/v1/search/?q=report.pdf&limit=10"
 
 ```bash
 curl "http://localhost:8000/api/v1/documents/?limit=50&offset=0"
+```
+
+**Get a document by ID:**
+
+```bash
+curl "http://localhost:8000/api/v1/documents/doc_abc123?include_content=true"
 ```
 
 **Delete a document:**
@@ -837,6 +855,7 @@ The frontend UI connects to this backend API at:
 - **Health Check**: `GET /api/v1/healthz`
 - **Document Upload**: `POST /api/v1/documents/upload`
 - **Document List**: `GET /api/v1/documents/`
+- **Get Document**: `GET /api/v1/documents/{id}`
 - **Search**: `GET /api/v1/search/?q=filename`
 - **Delete**: `DELETE /api/v1/documents/{id}`
 
@@ -883,7 +902,7 @@ Contributions welcome! Please ensure:
 - **Documentation**: Detailed guides + inline documentation
 - **Supported Formats**: All file formats (binary storage)
 - **MCP Tools**: 13 production-ready endpoints
-- **REST API Endpoints**: 6+ FastAPI endpoints
+- **REST API Endpoints**: 7+ FastAPI endpoints
 - **Dependencies**: Minimal, well-maintained packages
 - **Performance**: Sub-second response for most operations
 

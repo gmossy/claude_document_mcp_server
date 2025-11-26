@@ -269,6 +269,255 @@ class DocumentService:
         self.db_adapter.close(conn)
         return doc
 
+    def update_document(
+        self,
+        *,
+        document_id: str,
+        title: Optional[str] = None,
+        content: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        status: Optional[str] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        version_comment: str = "Updated document",
+    ) -> dict[str, Any]:
+        """
+        Update a document with automatic versioning.
+
+        If content changes, creates a new version. Otherwise, updates the
+        current document record.
+
+        Args:
+            document_id: Unique document identifier
+            title: New title (optional)
+            content: New content (optional, triggers new version if changed)
+            tags: New tags list (optional)
+            status: New status (optional)
+            metadata: Metadata to merge with existing (optional)
+            version_comment: Comment for new version if content changes
+
+        Returns:
+            Dictionary with updated document information
+
+        Raises:
+            ValueError: If document not found
+        """
+        conn = self._connect()
+        placeholder = self.db_adapter.get_parameter_placeholder()
+
+        # Get current document
+        cursor = self.db_adapter.execute(
+            conn,
+            f"SELECT * FROM documents WHERE id = {placeholder}",
+            (document_id,)
+        )
+        current = self.db_adapter.fetchone(cursor)
+        if not current:
+            self.db_adapter.close(conn)
+            raise ValueError(f"Document '{document_id}' not found.")
+
+        # Prepare update values
+        new_title = title if title is not None else current["title"]
+        new_content = content if content is not None else current["content"]
+        new_tags = tags if tags is not None else json.loads(current["tags"])
+        new_status = status if status is not None else current["status"]
+        
+        # Merge metadata
+        current_metadata = json.loads(current["metadata"])
+        if metadata is not None:
+            current_metadata.update(metadata)
+        new_metadata = current_metadata
+
+        # Check if content changed (triggers new version)
+        content_changed = content is not None and content != current["content"]
+        timestamp = _now_iso()
+        new_content_hash = self._content_hash(new_content)
+        new_size = len(new_content.encode("utf-8"))
+
+        if content_changed:
+            # Get next version number
+            cursor = self.db_adapter.execute(
+                conn,
+                f"""
+                SELECT MAX(version_number) AS max_version
+                FROM document_versions
+                WHERE document_id = {placeholder}
+                """,
+                (document_id,)
+            )
+            version_row = self.db_adapter.fetchone(cursor)
+            next_version = (version_row["max_version"] if version_row and version_row.get("max_version") else 0) + 1
+
+            # Create new version
+            self.db_adapter.execute(
+                conn,
+                f"""
+                INSERT INTO document_versions (
+                    document_id, version_number, title, content, tags,
+                    status, metadata, created_at, comment, content_hash
+                )
+                VALUES (
+                    {placeholder}, {placeholder}, {placeholder}, {placeholder},
+                    {placeholder}, {placeholder}, {placeholder}, {placeholder},
+                    {placeholder}, {placeholder}
+                )
+                """,
+                (
+                    document_id,
+                    next_version,
+                    new_title,
+                    new_content,
+                    json.dumps(new_tags),
+                    new_status,
+                    json.dumps(new_metadata),
+                    timestamp,
+                    version_comment,
+                    new_content_hash,
+                ),
+            )
+
+        # Update main document record
+        self.db_adapter.execute(
+            conn,
+            f"""
+            UPDATE documents SET
+                title = {placeholder},
+                content = {placeholder},
+                tags = {placeholder},
+                status = {placeholder},
+                metadata = {placeholder},
+                updated_at = {placeholder},
+                size = {placeholder},
+                content_hash = {placeholder}
+            WHERE id = {placeholder}
+            """,
+            (
+                new_title,
+                new_content,
+                json.dumps(new_tags),
+                new_status,
+                json.dumps(new_metadata),
+                timestamp,
+                new_size,
+                new_content_hash,
+                document_id,
+            ),
+        )
+
+        self.db_adapter.commit(conn)
+        self.db_adapter.close(conn)
+
+        return {
+            "success": True,
+            "document_id": document_id,
+            "title": new_title,
+            "status": new_status,
+            "updated_at": timestamp,
+            "version_created": content_changed,
+            "message": f"Document '{new_title}' updated successfully",
+        }
+
+    def get_document_version(
+        self,
+        *,
+        document_id: str,
+        version_number: int,
+    ) -> Optional[dict[str, Any]]:
+        """
+        Get a specific version of a document.
+
+        Args:
+            document_id: Unique document identifier
+            version_number: Version number to retrieve
+
+        Returns:
+            Version dictionary or None if not found
+        """
+        conn = self._connect()
+        placeholder = self.db_adapter.get_parameter_placeholder()
+
+        cursor = self.db_adapter.execute(
+            conn,
+            f"""
+            SELECT * FROM document_versions
+            WHERE document_id = {placeholder} AND version_number = {placeholder}
+            """,
+            (document_id, version_number)
+        )
+        version = self.db_adapter.fetchone(cursor)
+        if not version:
+            self.db_adapter.close(conn)
+            return None
+
+        version["tags"] = json.loads(version["tags"])
+        version["metadata"] = json.loads(version["metadata"])
+
+        self.db_adapter.close(conn)
+        return version
+
+    def compare_versions(
+        self,
+        *,
+        document_id: str,
+        version_a: int,
+        version_b: int,
+    ) -> dict[str, Any]:
+        """
+        Compare two versions of a document.
+
+        Args:
+            document_id: Unique document identifier
+            version_a: First version number
+            version_b: Second version number
+
+        Returns:
+            Dictionary with comparison results
+
+        Raises:
+            ValueError: If document or versions not found
+        """
+        version_a_data = self.get_document_version(
+            document_id=document_id,
+            version_number=version_a
+        )
+        if not version_a_data:
+            raise ValueError(f"Version {version_a} not found for document '{document_id}'")
+
+        version_b_data = self.get_document_version(
+            document_id=document_id,
+            version_number=version_b
+        )
+        if not version_b_data:
+            raise ValueError(f"Version {version_b} not found for document '{document_id}'")
+
+        content_a = version_a_data["content"]
+        content_b = version_b_data["content"]
+
+        # Simple diff calculation
+        lines_a = content_a.splitlines()
+        lines_b = content_b.splitlines()
+
+        # Calculate basic statistics
+        added_lines = len([l for l in lines_b if l not in lines_a])
+        removed_lines = len([l for l in lines_a if l not in lines_b])
+        changed = content_a != content_b
+
+        return {
+            "document_id": document_id,
+            "version_a": version_a,
+            "version_b": version_b,
+            "changed": changed,
+            "stats": {
+                "lines_added": added_lines,
+                "lines_removed": removed_lines,
+                "content_length_a": len(content_a),
+                "content_length_b": len(content_b),
+            },
+            "version_a_title": version_a_data["title"],
+            "version_b_title": version_b_data["title"],
+            "version_a_created": version_a_data["created_at"],
+            "version_b_created": version_b_data["created_at"],
+        }
+
     def delete_document(
         self,
         *,
@@ -423,7 +672,7 @@ class DocumentService:
         cursor = self.db_adapter.execute(
             conn,
             f"""
-            SELECT id, title, status, tags, created_at, updated_at, size
+            SELECT id, title, status, tags, created_at, updated_at, size, metadata
             FROM documents
             WHERE {where_clause}
             ORDER BY {order_by} {order_direction}
@@ -435,6 +684,14 @@ class DocumentService:
         rows = self.db_adapter.fetchall(cursor)
         documents = []
         for row in rows:
+            # Parse metadata if it exists
+            metadata = {}
+            if row.get("metadata"):
+                try:
+                    metadata = json.loads(row["metadata"])
+                except (json.JSONDecodeError, TypeError):
+                    metadata = {}
+            
             documents.append(
                 {
                     "id": row["id"],
@@ -443,7 +700,8 @@ class DocumentService:
                     "created_at": row["created_at"],
                     "updated_at": row["updated_at"],
                     "size": row["size"],
-                    "tags": json.loads(row["tags"]),
+                    "tags": json.loads(row["tags"]) if row.get("tags") else [],
+                    "metadata": metadata,
                 }
             )
 
