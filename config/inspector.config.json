@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "document-mcp": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "backend/mcp_document_server",
+        "python",
+        "document_mcp_server.py"
+      ]
+    }
+  }
+}
