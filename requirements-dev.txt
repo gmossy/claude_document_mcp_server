@@ -1,0 +1,28 @@
+# Development requirements for the document MCP server project
+# Install with: pip install -r requirements-dev.txt
+
+# FastAPI backend requirements
+-r backend/requirements.txt
+
+# MCP server dependencies
+mcp>=1.0.0
+pydantic>=2.0.0
+httpx>=0.25.0
+
+# Document processing libraries
+python-docx>=1.1.0
+pypdf>=4.0.0
+reportlab>=4.0.0
+pillow>=10.0.0
+openpyxl>=3.1.0
+python-pptx>=0.6.23
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.23.0
+
+# Development tools (optional)
+black>=23.0.0
+ruff>=0.1.0
+mypy>=1.0.0
+

@@ -16,13 +16,13 @@ from document_parsers import create_powerpoint_from_slides
 
 def test_powerpoint_charts():
     """Test PowerPoint chart creation."""
-    
+
     print("🧪 Testing PowerPoint Chart Support")
     print("=" * 50)
-    
+
     # Test file
     test_file = Path("test_powerpoint_with_charts.pptx")
-    
+
     # Create presentation with various chart types
     slides_data = [
         {
@@ -142,7 +142,7 @@ def test_powerpoint_charts():
             }
         }
     ]
-    
+
     print("\n1. Creating PowerPoint with charts...")
     try:
         create_powerpoint_from_slides(
@@ -158,7 +158,7 @@ def test_powerpoint_charts():
         import traceback
         traceback.print_exc()
         assert False, f"Failed to create PowerPoint with charts: {e}"
-    
+
     print("\n" + "=" * 50)
     print("✅ PowerPoint with charts created successfully!")
     print(f"\nTest file: {test_file}")

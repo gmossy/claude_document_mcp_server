@@ -12,18 +12,18 @@ from pathlib import Path
 
 def test_server():
     """Test the MCP server directly via stdio."""
-    
+
     print("🧪 Testing MCP Server Directly")
     print("=" * 50)
-    
+
     # Start the server using the current interpreter from the mcp_document_server dir
     # __file__ is in backend/mcp_document_server/tests, so we go up one level
     repo_root = Path(__file__).resolve().parent.parent  # backend/mcp_document_server
     server_path = sys.executable
     script_path = str(repo_root / "document_mcp_server.py")
-    
+
     print(f"\n1. Starting server: {server_path} {script_path}")
-    
+
     success = False
     try:
         process = subprocess.Popen(

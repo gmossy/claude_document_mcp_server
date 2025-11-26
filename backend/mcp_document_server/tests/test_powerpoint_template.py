@@ -19,14 +19,14 @@ from document_parsers import (
 
 def test_template_inspection():
     """Test inspecting a PowerPoint template's layouts."""
-    
+
     print("🧪 Testing PowerPoint Template Support")
     print("=" * 50)
-    
+
     # First, create a simple template to use as an example
     print("\n1. Creating a sample template...")
     template_file = Path("sample_template.pptx")
-    
+
     # Create a basic presentation to serve as a template
     template_slides = [
         {
@@ -35,7 +35,7 @@ def test_template_inspection():
             "layout": "title"
         }
     ]
-    
+
     try:
         create_powerpoint_from_slides(
             slides_data=template_slides,
@@ -46,13 +46,13 @@ def test_template_inspection():
     except Exception as e:
         print(f"❌ Failed to create template: {e}")
         assert False, f"Failed to create template: {e}"
-    
+
     # Inspect the template layouts
     print("\n2. Inspecting template layouts...")
     try:
         layouts = get_powerpoint_template_layouts(template_file)
         print(f"✅ Found {len(layouts)} layouts in template:\n")
-        
+
         for layout in layouts:
             print(f"  Layout {layout['index']}: {layout['name']}")
             print(f"    - Placeholders: {layout['placeholder_count']}")
@@ -63,11 +63,11 @@ def test_template_inspection():
     except Exception as e:
         print(f"❌ Failed to inspect template: {e}")
         assert False, f"Failed to inspect template: {e}"
-    
+
     # Create a presentation using the template
     print("\n3. Creating presentation from template...")
     output_file = Path("presentation_from_template.pptx")
-    
+
     slides_data = [
         {
             "title": "AI Strategy 2024",
@@ -99,7 +99,7 @@ def test_template_inspection():
             "layout_index": 1
         }
     ]
-    
+
     try:
         create_powerpoint_from_slides(
             slides_data=slides_data,
@@ -114,7 +114,7 @@ def test_template_inspection():
         import traceback
         traceback.print_exc()
         assert False, f"Failed to create presentation from template: {e}"
-    
+
     print("\n" + "=" * 50)
     print("✅ Template support working!")
     print("\nKey Features Demonstrated:")
@@ -122,7 +122,7 @@ def test_template_inspection():
     print("  - Using existing template for branding")
     print("  - Specific layout selection by index")
     print("  - Template theme, colors, and fonts preserved")
-    
+
     print("\n📝 How to use your own branded template:")
     print("  1. Create your branded PowerPoint template (.pptx)")
     print("  2. Inspect layouts: get_powerpoint_template_layouts(template_path)")

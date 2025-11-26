@@ -1,8 +1,20 @@
-## Mission Library – MCP Document Server
+# Mission Library – MCP Document Server
 
 This directory packages the Claude-style document MCP server as a standalone, dockerized component for the Mission Library backend.
 
-### Project structure
+**Note**: This is a document library management system. Files are stored as binary files without parsing or conversion. The system focuses on file organization, versioning, and metadata management.
+
+## Frontend
+
+The frontend UI is located in a separate repository:
+
+- **Repository**: `Physical-AI/Mission-Library`
+- **Branch**: `dotmilpf-frontend`
+- **URL**: `https://github.boozallencsn.com/Physical-AI/Mission-Library/tree/dotmilpf-frontend`
+
+The frontend communicates with this backend via the FastAPI REST API endpoints.
+
+## Project structure
 
 ```text
 backend/
@@ -32,7 +44,7 @@ uv run python document_mcp_server.py
 Option A — Direct (no config)
 
 ```bash
-cd /Users/glennmossy/dpg-ai-projects/claude_document_mcp_server
+cd <project-root>
 npx @modelcontextprotocol/inspector python backend/mcp_document_server/document_mcp_server.py
 ```
 
@@ -62,15 +74,31 @@ npx @modelcontextprotocol/inspector --config inspector.config.json --server docu
 Then open the printed URL, ensure Transport Type is STDIO, click Connect, and select `document_mcp` to see tools.
 
 ### Docker
+
+Build and run the containerized MCP server:
+
+```bash
+cd backend/mcp_document_server
+docker build -t mission-mcp-document-server .
+docker run --rm -it mission-mcp-document-server
+```
+
 ### Database tables (auto-created)
 
-- `documents` – main document records
+- `documents` – main document records with metadata
 - `document_versions` – version history per document
-- `documents_fts` – FTS index
+- `documents_fts` – FTS index for search
 - `document_files` – on-disk exports tracked per version
 - `document_binary` – raw uploaded files (binary blobs + metadata)
-- `document_embeddings` – semantic chunks + embeddings
+- `document_embeddings` – semantic chunks + embeddings (for text documents)
 
+### File Upload
+
+Files can be uploaded via the FastAPI REST API endpoint:
+
+- `POST /api/v1/documents/upload` - Upload files (Word, Excel, PDF, OpenUSD, code, markdown, etc.)
+- Files are stored as binary without parsing or conversion
+- Automatic versioning on upload
 
 ```bash
 cd backend/mcp_document_server
@@ -91,6 +119,7 @@ All tools accept JSON. Below are ready-to-paste examples.
   "offset": 0
 }
 ```
+
 Use the tool: `document_search` with the JSON above. Leave other fields empty to get everything.
 
 - Search by keywords and tags
@@ -143,10 +172,13 @@ Use the tool: `document_search` with the JSON above. Leave other fields empty to
 - Delete vs archive
 
 Archive (default):
+
 ```json
 { "document_id": "doc_abc123def456", "permanent": false }
 ```
+
 Permanent delete:
+
 ```json
 { "document_id": "doc_abc123def456", "permanent": true }
 ```

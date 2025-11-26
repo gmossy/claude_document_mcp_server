@@ -20,14 +20,14 @@ from document_parsers import (
 
 def test_powerpoint_support():
     """Test PowerPoint extraction and creation."""
-    
+
     print("🧪 Testing PowerPoint Support")
     print("=" * 50)
-    
+
     # Test 1: Create PowerPoint file
     print("\n1. Creating test PowerPoint file...")
     test_file = Path("test_powerpoint_output.pptx")
-    
+
     slides_data = [
         {
             "title": "Artificial Intelligence & Generative AI",
@@ -120,7 +120,7 @@ def test_powerpoint_support():
             ]
         }
     ]
-    
+
     try:
         create_powerpoint_from_slides(
             slides_data=slides_data,
@@ -131,7 +131,7 @@ def test_powerpoint_support():
     except Exception as e:
         print(f"❌ Failed to create PowerPoint: {e}")
         assert False, f"Failed to create PowerPoint: {e}"
-    
+
     # Test 2: Extract text from PowerPoint
     print("\n2. Extracting text from PowerPoint file...")
     try:
@@ -140,7 +140,7 @@ def test_powerpoint_support():
         print(f"\nMetadata:")
         for key, value in metadata.items():
             print(f"  - {key}: {value}")
-        
+
         print(f"\nExtracted content (first 400 chars):")
         print("-" * 50)
         print(text[:400])
@@ -148,7 +148,7 @@ def test_powerpoint_support():
     except Exception as e:
         print(f"❌ Failed to extract text: {e}")
         assert False, f"Failed to extract text: {e}"
-    
+
     # Test 3: Test auto-detection
     print("\n3. Testing auto-detection with extract_text_from_file...")
     try:
@@ -159,11 +159,11 @@ def test_powerpoint_support():
     except Exception as e:
         print(f"❌ Failed auto-detection: {e}")
         assert False, f"Failed auto-detection: {e}"
-    
+
     # Test 4: Create simple presentation
     print("\n4. Creating simple presentation...")
     simple_file = Path("test_powerpoint_simple.pptx")
-    
+
     simple_slides = [
         {
             "title": "Welcome",
@@ -183,7 +183,7 @@ def test_powerpoint_support():
             "content": "All tests passed successfully!"
         }
     ]
-    
+
     try:
         create_powerpoint_from_slides(
             slides_data=simple_slides,
@@ -191,16 +191,16 @@ def test_powerpoint_support():
             title="Simple Test Presentation"
         )
         print(f"✅ Created simple presentation: {simple_file}")
-        
+
         # Extract from simple presentation
         text3, metadata3 = extract_text_from_powerpoint(simple_file)
         print(f"✅ Simple presentation has {metadata3['slide_count']} slides")
         print(f"✅ Contains {metadata3['text_boxes']} text boxes")
-        
+
     except Exception as e:
         print(f"❌ Failed simple presentation test: {e}")
         assert False, f"Failed simple presentation test: {e}"
-    
+
     print("\n" + "=" * 50)
     print("✅ All PowerPoint tests passed!")
     print("\nTest files created:")

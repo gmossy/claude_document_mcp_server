@@ -1,3 +1,8 @@
+"""API v1 router configuration.
+
+This module aggregates all v1 API endpoints into a single router.
+"""
+
 from fastapi import APIRouter
 
 from .endpoints import auth, documents, search, analytics, health

@@ -22,10 +22,10 @@ from document_parsers import (
 
 def test_excel_support():
     """Test Excel extraction and creation."""
-    
+
     print("🧪 Testing Excel Support")
     print("=" * 50)
-    
+
     # Create test data
     test_data = [
         ["Name", "Age", "Department", "Salary"],
@@ -35,7 +35,7 @@ def test_excel_support():
         ["David Wilson", "31", "Engineering", "$90,000"],
         ["Eve Martinez", "29", "HR", "$70,000"],
     ]
-    
+
     # Test 1: Create Excel file
     print("\n1. Creating test Excel file...")
     test_file = Path("test_excel_output.xlsx")
@@ -50,7 +50,7 @@ def test_excel_support():
     except Exception as e:
         print(f"❌ Failed to create Excel: {e}")
         assert False, f"Failed to create Excel: {e}"
-    
+
     # Test 2: Extract text from Excel
     print("\n2. Extracting text from Excel file...")
     try:
@@ -59,7 +59,7 @@ def test_excel_support():
         print(f"\nMetadata:")
         for key, value in metadata.items():
             print(f"  - {key}: {value}")
-        
+
         print(f"\nExtracted content (first 300 chars):")
         print("-" * 50)
         print(text[:300])
@@ -67,7 +67,7 @@ def test_excel_support():
     except Exception as e:
         print(f"❌ Failed to extract text: {e}")
         assert False, f"Failed to extract text: {e}"
-    
+
     # Test 3: Test auto-detection
     print("\n3. Testing auto-detection with extract_text_from_file...")
     try:
@@ -77,48 +77,48 @@ def test_excel_support():
     except Exception as e:
         print(f"❌ Failed auto-detection: {e}")
         assert False, f"Failed auto-detection: {e}"
-    
+
     # Test 4: Create multi-sheet Excel
     print("\n4. Creating multi-sheet Excel file...")
     from openpyxl import Workbook
-    
+
     multi_file = Path("test_excel_multisheet.xlsx")
     try:
         wb = Workbook()
-        
+
         # Sheet 1: Summary
         ws1 = wb.active
         ws1.title = "Summary"
         ws1.append(["Total Employees", "5"])
         ws1.append(["Total Departments", "4"])
         ws1.append(["Average Salary", "$83,000"])
-        
+
         # Sheet 2: Details
         ws2 = wb.create_sheet("Details")
         for row in test_data:
             ws2.append(row)
-        
+
         # Sheet 3: Notes
         ws3 = wb.create_sheet("Notes")
         ws3.append(["Note", "Description"])
         ws3.append(["1", "All salaries are approximate"])
         ws3.append(["2", "Data as of 2024"])
-        
+
         wb.save(str(multi_file))
         wb.close()
         print(f"✅ Created multi-sheet file: {multi_file}")
-        
+
         # Extract from multi-sheet
         text3, metadata3 = extract_text_from_excel(multi_file)
         print(f"✅ Extracted from {metadata3['sheet_count']} sheets")
         print(f"   Sheet names: {', '.join(metadata3['sheet_names'])}")
         print(f"   Total rows: {metadata3['total_rows']}")
         print(f"   Total cells: {metadata3['total_cells']}")
-        
+
     except Exception as e:
         print(f"❌ Failed multi-sheet test: {e}")
         assert False, f"Failed multi-sheet test: {e}"
-    
+
     print("\n" + "=" * 50)
     print("✅ All Excel tests passed!")
     print("\nTest files created:")
