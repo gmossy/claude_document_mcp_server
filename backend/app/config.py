@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -7,9 +7,10 @@ class Settings(BaseSettings):
     storage_dir: str = "document_storage"
     allow_origins: list[str] = ["*"]
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": False,
+    }
 
 
 settings = Settings()

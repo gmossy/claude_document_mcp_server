@@ -8,7 +8,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional, List
 
-from document_parsers import create_docx_from_text, create_pdf_from_text
+from backend.mcp_document_server.document_parsers import (
+    create_docx_from_text,
+    create_pdf_from_text,
+)
 
 
 def _now_iso() -> str:
@@ -16,13 +19,24 @@ def _now_iso() -> str:
 
 
 def _sanitize_filename(name: str, default: str = "document") -> str:
-    base = "".join(c if c.isalnum() or c in (" ", "-", "_") else "_" for c in (name or default))
-    base = "_".join(base.split())
+    """Sanitize a filename by removing invalid characters."""
+    safe_chars = "".join(
+        c if c.isalnum() or c in (" ", "-", "_") else "_"
+        for c in (name or default)
+    )
+    base = "_".join(safe_chars.split())
     return base or default
 
 
 @dataclass
 class DocumentService:
+    """
+    Service layer for document management operations.
+
+    Provides CRUD operations, file exports, binary storage,
+    and semantic search capabilities.
+    """
+
     db_path: Path
     storage_dir: Path
 
@@ -57,6 +71,20 @@ class DocumentService:
         metadata: Optional[dict[str, Any]] = None,
         version_comment: str = "Initial version",
     ) -> dict[str, Any]:
+        """
+        Create a new document with automatic versioning.
+
+        Args:
+            title: Document title
+            content: Document content (text/markdown)
+            tags: List of tags for categorization
+            status: Document status (draft/published/archived)
+            metadata: Optional metadata dictionary
+            version_comment: Comment for initial version
+
+        Returns:
+            Dictionary with document_id, title, status, created_at, etc.
+        """
         metadata = metadata or {}
         document_id = self._generate_document_id()
         timestamp = _now_iso()
@@ -68,7 +96,10 @@ class DocumentService:
 
         cursor.execute(
             """
-            INSERT INTO documents (id, title, content, tags, status, metadata, created_at, updated_at, size, content_hash)
+            INSERT INTO documents (
+                id, title, content, tags, status, metadata,
+                created_at, updated_at, size, content_hash
+            )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
@@ -87,7 +118,10 @@ class DocumentService:
 
         cursor.execute(
             """
-            INSERT INTO document_versions (document_id, version_number, title, content, tags, status, metadata, created_at, comment, content_hash)
+            INSERT INTO document_versions (
+                document_id, version_number, title, content, tags,
+                status, metadata, created_at, comment, content_hash
+            )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
@@ -126,6 +160,17 @@ class DocumentService:
         include_content: bool = True,
         include_versions: bool = False,
     ) -> Optional[dict[str, Any]]:
+        """
+        Retrieve a document by ID.
+
+        Args:
+            document_id: Unique document identifier
+            include_content: Whether to include full content
+            include_versions: Whether to include version history
+
+        Returns:
+            Document dictionary or None if not found
+        """
         conn = self._connect()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM documents WHERE id = ?", (document_id,))
@@ -169,6 +214,24 @@ class DocumentService:
         file_name: Optional[str] = None,
         code_extension: Optional[str] = None,
     ) -> dict[str, Any]:
+        """
+        Export a document version to a file on disk.
+
+        Supported formats: markdown, txt, docx, pdf, code
+
+        Args:
+            document_id: Document to export
+            format: Export format
+            version_number: Specific version (defaults to latest)
+            file_name: Custom filename (defaults to document title)
+            code_extension: Required for code format (e.g., .py, .cpp)
+
+        Returns:
+            Dictionary with path, size, version_number, etc.
+
+        Raises:
+            ValueError: If document/version not found or format invalid
+        """
         conn = self._connect()
         cursor = conn.cursor()
 
@@ -200,7 +263,11 @@ class DocumentService:
             title = row["title"]
             content = row["content"]
             cursor.execute(
-                "SELECT MAX(version_number) AS v FROM document_versions WHERE document_id = ?",
+                """
+                SELECT MAX(version_number) AS v
+                FROM document_versions
+                WHERE document_id = ?
+                """,
                 (document_id,),
             )
             version_number = cursor.fetchone()["v"] or 1
@@ -218,7 +285,11 @@ class DocumentService:
             if not code_extension:
                 conn.close()
                 raise ValueError("code_extension is required when format='code'.")
-            ext = code_extension if code_extension.startswith(".") else f".{code_extension}"
+            ext = (
+                code_extension
+                if code_extension.startswith(".")
+                else f".{code_extension}"
+            )
         else:
             conn.close()
             raise ValueError(f"Unsupported format: {format}")
@@ -268,13 +339,22 @@ class DocumentService:
         file_format: str,
         content_bytes: bytes,
     ) -> int:
+        """
+        Store binary file content in document_binary table.
+
+        Returns:
+            Size of stored file in bytes
+        """
         checksum = hashlib.sha256(content_bytes).hexdigest()
         size = len(content_bytes)
         conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO document_binary (document_id, version_number, filename, mime_type, format, content_blob, size_bytes, checksum, created_at)
+            INSERT INTO document_binary (
+                document_id, version_number, filename, mime_type, format,
+                content_blob, size_bytes, checksum, created_at
+            )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
@@ -306,6 +386,14 @@ class DocumentService:
         file_format: str,
         content_bytes: bytes,
     ) -> dict[str, Any]:
+        """
+        Create a document from an uploaded file.
+
+        Extracts text, creates document record, and stores binary file.
+
+        Returns:
+            Document creation result with binary file metadata
+        """
         metadata = metadata or {}
         result = self.create_document(
             title=title,
@@ -336,7 +424,21 @@ class DocumentService:
     # Semantic search (FTS-backed placeholder)
     # ------------------------------------------------------------------ #
 
-    def semantic_search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+    def semantic_search(
+        self, query: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
+        """
+        Perform full-text semantic search on documents.
+
+        Uses SQLite FTS5 for text matching with snippet highlighting.
+
+        Args:
+            query: Search query string
+            limit: Maximum number of results
+
+        Returns:
+            List of matching documents with snippets
+        """
         query = query.strip()
         if not query:
             return []
@@ -346,18 +448,20 @@ class DocumentService:
 
         conn = self._connect()
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT d.id AS document_id,
-                   d.title,
-                   d.status,
-                   d.tags,
-                   snippet(documents_fts, 2, '<b>', '</b>', ' … ', 10) AS snippet
-            FROM documents_fts
-            JOIN documents d ON d.rowid = documents_fts.rowid
-            WHERE documents_fts MATCH ?
-            LIMIT ?
-            """,
+            cursor.execute(
+                """
+                SELECT d.id AS document_id,
+                       d.title,
+                       d.status,
+                       d.tags,
+                       snippet(
+                           documents_fts, 2, '<b>', '</b>', ' … ', 10
+                       ) AS snippet
+                FROM documents_fts
+                JOIN documents d ON d.rowid = documents_fts.rowid
+                WHERE documents_fts MATCH ?
+                LIMIT ?
+                """,
             (fts_query, limit),
         )
         rows = cursor.fetchall()
