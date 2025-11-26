@@ -1,8 +1,9 @@
 # Document Management MCP Server
 
 > **Created by Glenn Mossy**  
+  *Booz Allen Hamilton
 > *Sr. AI Software Developer & Data Scientist*  
-> November 14, 2024
+> November 27, 2024
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/MCP-1.0+-green.svg)](https://modelcontextprotocol.io/)
@@ -727,8 +728,7 @@ This project showcases proficiency in:
 
 ### Contact & Links
 
-- **GitHub**: [github.com/gmossy/claude_document_mcp_server](https://github.com/gmossy/claude_document_mcp_server)
-- **Project Date**: November 14, 2024
+- **Project Date**: November 26, 2024
 - **Role**: Creator & Lead Developer
 
 ## Acknowledgments
