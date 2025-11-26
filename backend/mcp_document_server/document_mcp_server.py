@@ -23,6 +23,7 @@ from contextlib import asynccontextmanager
 from mcp.server.fastmcp import FastMCP, Context
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from document_parsers import create_pdf_from_text, create_docx_from_text
+from backend.core.services.documents import DocumentService
 
 # ============================================================================
 # Constants
@@ -37,6 +38,8 @@ MAX_TAGS = 50
 MAX_TITLE_LENGTH = 500
 MAX_SEARCH_RESULTS = 100
 DEFAULT_PAGE_SIZE = 20
+
+document_service = DocumentService(DATABASE_PATH, DOCUMENTS_DIR)
 
 # ============================================================================
 # Enums
@@ -784,69 +787,23 @@ async def document_create(params: CreateDocumentInput) -> str:
             }
     """
     try:
-        doc_id = generate_document_id()
-        timestamp = get_current_timestamp()
-        content_hash = calculate_content_hash(params.content)
-        size = len(params.content.encode('utf-8'))
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Insert document
-        cursor.execute("""
-            INSERT INTO documents (id, title, content, tags, status, metadata, created_at, updated_at, size, content_hash)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            doc_id,
-            params.title,
-            params.content,
-            json.dumps(params.tags),
-            params.status.value,
-            json.dumps(params.metadata),
-            timestamp,
-            timestamp,
-            size,
-            content_hash
-        ))
-        
-        # Create initial version
-        cursor.execute("""
-            INSERT INTO document_versions (document_id, version_number, title, content, tags, status, metadata, created_at, comment, content_hash)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            doc_id,
-            1,
-            params.title,
-            params.content,
-            json.dumps(params.tags),
-            params.status.value,
-            json.dumps(params.metadata),
-            timestamp,
-            "Initial version",
-            content_hash
-        ))
-        
-        conn.commit()
-        conn.close()
-        
-        return json.dumps({
-            "success": True,
-            "document_id": doc_id,
-            "title": params.title,
-            "status": params.status.value,
-            "created_at": timestamp,
-            "size": size,
-            "tags": params.tags,
-            "version": 1,
-            "message": f"Document '{params.title}' created successfully with ID {doc_id}"
-        }, indent=2)
-        
+        result = document_service.create_document(
+            title=params.title,
+            content=params.content,
+            tags=params.tags,
+            status=params.status.value,
+            metadata=params.metadata,
+        )
+        return json.dumps(result, indent=2)
     except Exception as e:
-        return json.dumps({
-            "success": False,
-            "error": f"Failed to create document: {str(e)}",
-            "suggestion": "Please check your input parameters and try again."
-        }, indent=2)
+        return json.dumps(
+            {
+                "success": False,
+                "error": f"Failed to create document: {str(e)}",
+                "suggestion": "Please check your input parameters and try again.",
+            },
+            indent=2,
+        )
 
 
 @mcp.tool(
@@ -888,49 +845,38 @@ async def document_get(params: GetDocumentInput) -> str:
             }
     """
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT * FROM documents WHERE id = ?", (params.document_id,))
-        row = cursor.fetchone()
-        
-        if not row:
-            conn.close()
-            return json.dumps({
-                "success": False,
-                "error": f"Document with ID '{params.document_id}' not found.",
-                "suggestion": "Please verify the document ID and try again. Use document_search to find documents."
-            }, indent=2)
-        
-        doc = dict(row)
-        
-        if params.include_versions:
-            cursor.execute("""
-                SELECT version_number, title, created_at, comment, content_hash
-                FROM document_versions
-                WHERE document_id = ?
-                ORDER BY version_number DESC
-            """, (params.document_id,))
-            versions = [dict(v) for v in cursor.fetchall()]
-            doc['versions'] = versions
-        
-        conn.close()
-        
+        doc = document_service.get_document(
+            document_id=params.document_id,
+            include_content=True,
+            include_versions=params.include_versions,
+        )
+
+        if not doc:
+            return json.dumps(
+                {
+                    "success": False,
+                    "error": f"Document with ID '{params.document_id}' not found.",
+                    "suggestion": "Please verify the document ID and try again. Use document_search to find documents.",
+                },
+                indent=2,
+            )
+
         if params.response_format == ResponseFormat.MARKDOWN:
             return format_document_markdown(doc, params.include_content, params.include_versions)
         else:
             if not params.include_content:
-                doc.pop('content', None)
-            doc['tags'] = json.loads(doc['tags'])
-            doc['metadata'] = json.loads(doc['metadata'])
+                doc.pop("content", None)
             return json.dumps(doc, indent=2)
-        
+
     except Exception as e:
-        return json.dumps({
-            "success": False,
-            "error": f"Failed to retrieve document: {str(e)}",
-            "suggestion": "Please try again or contact support if the issue persists."
-        }, indent=2)
+        return json.dumps(
+            {
+                "success": False,
+                "error": f"Failed to retrieve document: {str(e)}",
+                "suggestion": "Please try again or contact support if the issue persists.",
+            },
+            indent=2,
+        )
 
 
 @mcp.tool(
@@ -1885,144 +1831,19 @@ async def document_export(params: ExportDocumentInput) -> str:
     },
 )
 async def document_export_file(params: ExportFileInput) -> str:
-    """Export a document version to a versioned file on disk and record it in the database.
-    
-    Files are stored under:
-        document_storage/<document_id>/v<version_number>/<file_name>.<ext>
-    
-    Supported formats:
-      - markdown -> .md
-      - txt      -> .txt
-      - docx     -> Word document (uses create_docx_from_text)
-      - pdf      -> PDF document (uses create_pdf_from_text)
-      - code     -> arbitrary text file with given code_extension (e.g. .py, .cpp, .usd)
-    
-    The created file is registered in the document_files table for auditability.
-    """
+    """Export a document version to a versioned file on disk and record it in the database."""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Determine version number and content source
-        if params.version_number is not None:
-            cursor.execute(
-                """
-                SELECT title, content
-                FROM document_versions
-                WHERE document_id = ? AND version_number = ?
-                """,
-                (params.document_id, params.version_number),
-            )
-            row = cursor.fetchone()
-            if not row:
-                conn.close()
-                return json.dumps(
-                    {
-                        "success": False,
-                        "error": f"Version {params.version_number} not found for document '{params.document_id}'.",
-                    },
-                    indent=2,
-                )
-            version_number = params.version_number
-            title = row["title"]
-            content = row["content"]
-        else:
-            # Use latest version from main documents table
-            cursor.execute(
-                "SELECT title, content FROM documents WHERE id = ?", (params.document_id,)
-            )
-            row = cursor.fetchone()
-            if not row:
-                conn.close()
-                return json.dumps(
-                    {
-                        "success": False,
-                        "error": f"Document '{params.document_id}' not found.",
-                    },
-                    indent=2,
-                )
-            title = row["title"]
-            content = row["content"]
-            cursor.execute(
-                "SELECT MAX(version_number) AS v FROM document_versions WHERE document_id = ?",
-                (params.document_id,),
-            )
-            version_number = cursor.fetchone()["v"] or 1
-
-        # Resolve filename and extension
-        safe_title = sanitize_filename(params.file_name or title or params.document_id)
-        if params.format == "markdown":
-            ext = ".md"
-        elif params.format == "txt":
-            ext = ".txt"
-        elif params.format == "docx":
-            ext = ".docx"
-        elif params.format == "pdf":
-            ext = ".pdf"
-        elif params.format == "code":
-            if not params.code_extension:
-                conn.close()
-                return json.dumps(
-                    {
-                        "success": False,
-                        "error": "code_extension is required when format='code'.",
-                    },
-                    indent=2,
-                )
-            ext = params.code_extension if params.code_extension.startswith(".") else f".{params.code_extension}"
-        else:
-            conn.close()
-            return json.dumps(
-                {"success": False, "error": f"Unsupported format: {params.format}"},
-                indent=2,
-            )
-
-        version_dir = DOCUMENTS_DIR / params.document_id / f"v{version_number}"
-        version_dir.mkdir(parents=True, exist_ok=True)
-        file_path = version_dir / f"{safe_title}{ext}"
-
-        # Create the file according to format
-        if params.format in {"markdown", "txt", "code"}:
-            # For now we use raw content; callers can store markdown or code as needed.
-            file_path.write_text(content, encoding="utf-8")
-        elif params.format == "docx":
-            create_docx_from_text(content, file_path, title)
-        elif params.format == "pdf":
-            create_pdf_from_text(content, file_path, title)
-
-        size = file_path.stat().st_size
-        created_at = get_current_timestamp()
-
-        cursor.execute(
-            """
-            INSERT INTO document_files (document_id, version_number, format, path, size, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                params.document_id,
-                version_number,
-                params.format,
-                str(file_path),
-                size,
-                created_at,
-            ),
+        result = document_service.export_document_file(
+            document_id=params.document_id,
+            format=params.format,
+            version_number=params.version_number,
+            file_name=params.file_name,
+            code_extension=params.code_extension,
         )
-        conn.commit()
-        conn.close()
+        return json.dumps(result, indent=2)
 
-        return json.dumps(
-            {
-                "success": True,
-                "document_id": params.document_id,
-                "version_number": version_number,
-                "format": params.format,
-                "path": str(file_path),
-                "size": size,
-                "created_at": created_at,
-                "message": f"Exported v{version_number} of '{title}' to {file_path}",
-            },
-            indent=2,
-        )
+    except ValueError as e:
+        return json.dumps({"success": False, "error": str(e)}, indent=2)
 
     except Exception as e:
         return json.dumps(

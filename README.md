@@ -642,6 +642,15 @@ backend/
     Dockerfile                # Container image for this server
     README-mcp.md             # Subproject README
 
+  app/                        # FastAPI application (new)
+    main.py                   # FastAPI entrypoint
+    config.py                 # Settings (env-driven)
+    api/
+      deps.py                 # Shared dependencies
+      v1/router.py            # Versioned API router
+      v1/endpoints/           # auth, documents, search, analytics, health
+    models/                   # Pydantic/SQLAlchemy models
+
 dist/
   document_mcp-*.whl, *.tar.gz # Built artifacts
 ```
