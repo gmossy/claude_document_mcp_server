@@ -1,0 +1,122 @@
+# ============================================================================
+# TERRAFORM VARIABLES EXAMPLE
+# ============================================================================
+# Copy this file to terraform.tfvars and update with your values.
+# DO NOT commit terraform.tfvars to version control!
+
+# AWS Configuration
+aws_region   = "us-gov-west-1"
+project_name = "document-gateway"
+environment  = "prod"
+
+# ============================================================================
+# EXISTING VPC CONFIGURATION
+# ============================================================================
+# Set use_existing_vpc = true to use your existing VPC
+# VPC ID: vpc-0f3105b0797e0c715
+# VPC CIDR: 172.31.0.0/16
+
+use_existing_vpc = true
+existing_vpc_id  = "vpc-0f3105b0797e0c715"
+
+# Existing Public Subnets (all 3 subnets are public with auto-assign IP)
+existing_public_subnet_ids = [
+  "subnet-0c49610cf73743965",  # us-gov-west-1a, 172.31.16.0/20
+  "subnet-03bee96a64f553768",  # us-gov-west-1b, 172.31.32.0/20
+  "subnet-062946cb6065791e6"   # us-gov-west-1c, 172.31.0.0/20
+]
+
+# Existing Private Subnets (if you have private subnets, list them here)
+# If empty, will use public subnets for ECS tasks (less secure but works)
+existing_private_subnet_ids = [
+  "subnet-0c49610cf73743965",  # Using public subnets (you may want to create private subnets)
+  "subnet-03bee96a64f553768"
+]
+
+# Database Subnets (optional, will use private subnets if not specified)
+existing_database_subnet_ids = []
+
+# Existing Internet Gateway (will auto-detect if not specified)
+existing_internet_gateway_id = "igw-091694f31ae193e98"
+
+# Existing NAT Gateway (optional, will create one if not specified and enable_nat_gateway is true)
+existing_nat_gateway_id = ""
+
+# Networking (only used if creating new VPC)
+vpc_cidr            = "172.31.0.0/16"
+enable_nat_gateway  = false  # Set to false since all subnets are public
+enable_vpc_endpoints = true
+
+# ============================================================================
+# ECR CONFIGURATION
+# ============================================================================
+
+ecr_image_tag            = "latest"
+ecr_image_retention_count = 10
+
+# ============================================================================
+# ECS CONFIGURATION
+# ============================================================================
+
+api_cpu           = 512
+api_memory        = 1024
+api_desired_count = 2
+
+nginx_cpu           = 256
+nginx_memory        = 512
+nginx_desired_count = 2
+
+# ============================================================================
+# APPLICATION CONFIGURATION
+# ============================================================================
+
+api_version     = "0.1.0"
+log_level       = "INFO"
+allowed_origins = ["https://yourdomain.gov"]
+
+# ============================================================================
+# DATABASE CONFIGURATION
+# ============================================================================
+
+use_rds             = true
+db_instance_class   = "db.t3.micro"
+db_allocated_storage = 20
+db_name             = "documentgateway"
+db_username         = "admin"
+db_password         = "CHANGE_ME_USE_SECRET_MANAGER" # Use AWS Secrets Manager in production!
+
+# ============================================================================
+# S3 CONFIGURATION
+# ============================================================================
+
+s3_enable_versioning = true
+s3_enable_encryption = true
+s3_lifecycle_days    = 90
+
+# ============================================================================
+# BEDROCK CONFIGURATION
+# ============================================================================
+
+bedrock_model_id = "anthropic.claude-v2"
+bedrock_region   = "us-gov-west-1"
+
+# ============================================================================
+# LOAD BALANCER CONFIGURATION
+# ============================================================================
+
+alb_certificate_arn = "" # ARN of ACM certificate for HTTPS
+alb_enable_https     = false
+alb_idle_timeout     = 60
+
+# ============================================================================
+# SECURITY CONFIGURATION
+# ============================================================================
+
+allowed_cidr_blocks = ["10.0.0.0/8"] # Restrict to your network!
+
+# ============================================================================
+# CLOUDWATCH CONFIGURATION
+# ============================================================================
+
+enable_cloudwatch_logs = true
+cloudwatch_retention_days = 30
